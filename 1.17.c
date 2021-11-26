@@ -1,11 +1,10 @@
 #include <stdio.h>
 #define MAXLINE 1000
-
+#define LIMIT 80
 int get_line (char charline[], int maxline) 
 {
-    int c;
-    int i = 0; // over symbol count
-    int j = 0;
+    int i = 0, j = 0, c = 0;
+
     for (j = 0; (c = getchar()) != EOF && c!= '\n';)
     {
         if (j < maxline - 2)
@@ -22,42 +21,38 @@ int get_line (char charline[], int maxline)
     if (c == '\n')
     {
         charline[j] = c;
-        j++;
         i++;
     }
-    charline[j] = '\0';
-
     return i;
 }
 void copy(char to[], char from[])
 {
     int i = 0;
-    while (from[i] != '\0')
-    {
-         to[i] = from[i];
-         i++;
+    while (from[i] != '\n')
+    {            
+        to[i] = from[i];
+        i++;
     }
-    to[i] = '\0';
+    to[i] = '\n';
 }
+
 int main(void)
 {
-    int length; // current line length
-    char line[MAXLINE]; // current line input
-    char over_80[MAXLINE]; // line over 80
+    int length = 0, current_line = 0;
+    char line[MAXLINE];
+    char over_80[MAXLINE];
 
     while ((length = get_line(line, MAXLINE)) > 0)
     {
-        if (length > 80)
+        if (length > LIMIT)
         {
-            copy(over_80, line);
-        }
-        else 
-        {
-            continue;
+            copy(over_80 + current_line, line);
+            current_line =  current_line + length;
         }
     }
-     printf("\n%s\n",over_80);
+    if (current_line > LIMIT)
+        {
+            printf("%s\n",over_80);
+        }
     return 0;
 }
-
-
