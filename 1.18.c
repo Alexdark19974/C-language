@@ -2,7 +2,7 @@
 #define MAXLINE 1000
 #define LIMIT 0
 int get_line(char[], int);
-void copy(char[], char[]);
+void removal(char[], char[]);
 
 int main(void)
 {
@@ -12,30 +12,13 @@ int main(void)
 
     while ((length = get_line(line, MAXLINE)) > 0)
     {
-        if (line[0] == '\n')
+        if (length > LIMIT)
         {
-            line[0] = '\0';
-            //printf("Blank line, input non-blank line\n");
-        }
-        else
-        {
-            copy(edited, line);
+            removal(edited, line);
             printf("%s\n", edited);
         }
     }
     return 0;
-}
-
-void copy(char to[], char from[])
-{
-    int i = 0;
-    while (from[i] != '\n')
-    {            
-        to[i] = from[i];
-        i++;
-    }
-    to[i] = '\n';
-    to[i++] = '\0';
 }
 
 int get_line(char charline[], int maxline) 
@@ -44,42 +27,44 @@ int get_line(char charline[], int maxline)
 
     for (i = 0; i < maxline - 2 && (c = getchar()) != EOF && c!= '\n';)
     {
-        if (c == '\t')
-        {
-            if (c == '\t' && charline[i - 1] == ' ')
-            {
-                continue;
-            }
-            else
-            {
-                charline[i] = ' ';
-                i++;
-            }    
-        }
-        else if(charline[i - 1] == ' ' && c == ' ' ||
-                charline[i - 1] == ' ' && charline[i] == '\t' || 
-                charline[i - 1] == '\t'&& charline[i] == ' ')
-        {
-            continue;
-           // charline[i - 1] = '\b';
-        }
-        else
-        {
-            charline[i] = c;
-            i++;
-        }
+        charline[i] = c;
+        i++;
     }
-    if (c == EOF)
-    {
-        charline[i] = '\0';
-        printf("\n%s\n", charline);
-        return 0;
-    }
-    else if (c == '\n')
+    if (c == '\n')
     {
         charline[i] = c;
         i++;
         charline[i] = '\0';
     }
+    if(c == EOF)
+    {
+        charline[i] = '\0';
+        puts("");
+    }
     return i;
+}
+
+void removal(char to[], char from[])
+{
+    int i = 0;
+    while (from[i] != '\n' && from[i] != '\0')
+    { 
+        if (from[i] == '\t')
+        {
+            from[i] = ' ';
+            to[i] = from[i];
+            i++;
+        }
+        else if (from[i] == ' ' && from[i++] == ' ')
+        {
+            to[i] = from[i];
+            i++;
+            continue;
+        }
+            
+            to[i] = from[i];
+            i++;
+    }
+    to[i] = '\n';
+    to[i++] = '\0';
 }
