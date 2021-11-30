@@ -1,11 +1,10 @@
 #include <stdio.h>
 #define MAXL 1000
 #define TAB 8
-/* Write a program entab that replaces strings of blanks with the minimum number of tabs and blanks to achieve the same spacing. 
-  Use the same stops as for detab.
- When either a tab or a single blank would suffice to reach a tab stop, which should be given preference? */
+
 int get_line (char[], int);
 void entab (char[], char[]);
+
 int main (void)
 {
     char s[MAXL];
@@ -88,9 +87,16 @@ void entab (char s_edited[], char s[])
                     b_count--;
                 }
             }
-                s_edited[i] = s[j];
-                i++;
-                j++;
+            
+            s_edited[i] = s[j];
+
+            if (s[j] == '\t')
+            {
+                s_count = TAB - (s_count % TAB); 
+            }
+            i++;
+            j++;
+            
         }
         s_count++;
     }
