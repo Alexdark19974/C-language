@@ -2,7 +2,7 @@
 #define MAXL 1000
 #define TAB 8
 int get_line(char[], int);
-void copy(char[], char[]);
+void detab(char[], char[]);
 int main(void)
 {
     char s[MAXL];
@@ -12,7 +12,7 @@ int main(void)
     {
         if (len > 0)
         {
-            copy(s_edited, s);
+            detab(s_edited, s);
             printf("%s", s_edited);   
         }
     }
@@ -38,7 +38,7 @@ int get_line(char s[], int max)
     s[i++] = '\0';
     return i;
 }
-void copy(char s_edited[], char s[])
+void detab(char s_edited[], char s[])
 {
     int i = 0;
     int count = 0;
