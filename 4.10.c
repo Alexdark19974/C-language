@@ -1,3 +1,4 @@
+  
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -8,28 +9,23 @@
 #define NUMBER '0'
 #define MYEOF '1'
 
-/*An alternate organization uses getline to read an entire input line; this makes getch and ungetch unnecessary. Revise the calculator to use this approach.*/
-
 int sp = 0;
 double val[MAXVAL];
 char buf[BUFSIZE];
-char f_point_buf[BUFSIZE];
-int f_buf = 0;
+char s[MAXVAL];
 int bufp = 0;
 int flag = 0;
-int i = 0;
-int lock_get_line = 0;
-int opening_number = 0;
-int closing_number = 0;
+int close_get_line = 0;
+
 
 int getop(char[]);
 void push(double);
 double pop(void);
+void get_line(char *, int);
 double stack_top(void);
 void dublicate(void);
 void swap(void);
 void free_stack(void);
-void get_line(char[], int);
 
 int main(void)
 {
@@ -40,15 +36,15 @@ int main(void)
     char s[MAXOP];
     int lock = 0;
     double variable;
-    double RAX = 0.0;
+    char buff_line[MAXVAL];
 
-    while ((type = getop(s)) != EOF)
+    while ((type = getop(buff_line)) != EOF)
     {
         switch(type)
         {
             case MYEOF:
             {
-                printf ("\t EOF : %.8g\n", pop());
+                printf ("\t%.8g\n", pop());
                 return 0;
             }
             case 'a': case 'b' : case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
@@ -60,42 +56,13 @@ int main(void)
             }
             case NUMBER:
             {
-                
-                if (opening_number != (closing_number - 1) && flag != -1)
-                {
-                    while (opening_number < closing_number)
-                    {
-                        RAX = (10.0 * RAX) + (s[opening_number++] - '0');
-                    }
-                    printf("%.8g\n",RAX);
-                    push(RAX);
-                    RAX = 0.0;
-                }
-                else if (f_buf != 0)
-                {
-                   // printf("blink!\n");
-                    push(atof(f_point_buf));
-                    f_buf = 0;
-                }
-                else if (flag != -1)
-                {
-                    RAX = (10.0 * RAX) + (s[i - 1] - '0');
-                    push(RAX);
-                    RAX = 0.0;
-                }
-                else
-                {
-                    RAX = (10.0 * RAX) + (s[i - 1] - '0');
-                    printf("%.8g\n",RAX);
-                    push(RAX);
-                    RAX = 0.0;
-                }
-                
-                
+                push(atof(buff_line));
+                printf("%s s is buff_line\n", buff_line);
                 break;
             }
             case '+':
             {
+
                 push(pop() + pop());
                 break;
             }
@@ -175,13 +142,10 @@ int main(void)
             }
             case '\n':
             {
-                if (!lock)
+                if (close_get_line || !lock)
                 {
                     printf ("\t%.8g\n", pop());
-                    i = 0;
-                    s[i] = '\0';
-                    free_stack();
-                    lock_get_line = 0;
+                    close_get_line = 0;
                     break;
                 }
             }
@@ -200,73 +164,84 @@ int main(void)
     return 0;
 }
 
-int getop(char s[])
+int getop(char buff_line[])
 {
-    if(!lock_get_line)
+    extern int close_get_line;
+    int i = 0;
+    int c = 0;
+    static int length = 0;
+
+    if (!close_get_line)
     {
-        get_line(s,MAXOP);
-        lock_get_line = 1;
+        get_line(s, MAXVAL);
+        close_get_line = 1;
+        length = 0;
+    }
+    
+    while ((buff_line[0] = c = s[length]) == ' ' || c == '\t') // c = 1 c = 2
+    {
+        length++;
+    }
+    printf ("c is %c\n", c);
+
+    if (c == '\n')
+    {
+        printf("'\\n' is found\n");
+    }
+    buff_line[1] = '\0';
+
+    if (c == '-')
+    {
+        length++;
+        while (isdigit(buff_line[i] = c = s[length]))
+        {
+            flag = -1;
+            i++;
+            length++;
+        }
     }
 
-        if (s[i] == ' ' || s[i] == '\t')
-        { 
-            while (s[i] == ' ' || s[i] == '\t')
-            {
-                i++;
-            }
-        }
-
-        if (s[i] == '-')
+    if (!isdigit(c) && c  != '.' && c != ' ' && c != '\t' && c != EOF)
+    {
+        printf("%c is non-integer\n", c);
+        length++;
+        return c;
+    }
+    if (isdigit(c))
+    {
+        while (isdigit(buff_line[i] = c = s[length])) // c = s c = c
         {
+            length++;
             i++;
-            flag = -1;
-            while (isdigit(s[++i]))
-            {
-                ;
-            }
         }
-        
-        if (!isdigit(s[i]) && s[i]  != '.' && s[i] != ' ' && s[i] != '\t' && s[i] != EOF && s[i] != '\0')
-        {
-            return s[i++];
-        }
+    }
 
-        if (isdigit(s[i]))
+    /*if (c == '.')
+    {
+        length++;
+        while(isdigit(s[length]))
         {
-            opening_number = i;
-
-            while (isdigit(s[++i]))
-            {
-                ;
-            }
-            closing_number = i;
+            length++;
         }
-      // printf(" the count of number is %d\n", counter);
-        if (s[i] == '.')
-        {
-            f_point_buf[f_buf++] = s[opening_number];
-            f_point_buf[f_buf++] = s[i];
-
-            while (isdigit(s[++i]))
-            {
-              f_point_buf[f_buf] = s[i];
-            }
-        }
-        
-        if (s[i] == '\0') 
-        {
-            return MYEOF;
-        }
-        return NUMBER; 
+        length--;
+    } */
+    
+    buff_line[i] = '\0';
+    return NUMBER;
 }
 
-    
 void push(double f)
 {
     if (sp < MAXVAL)
     {
-        
-       val[sp++] = (flag == -1) ? f * flag : f ; 
+       val[sp] = (flag == -1) ? f * flag : f; 
+
+       if (val[sp] == -0.0)
+       {
+           val[sp] = 0.0;
+       }
+
+       sp++;
        flag = 0;
     }
     else
@@ -274,6 +249,7 @@ void push(double f)
         printf("error: stack full, can't push %g\n", f);
     }
 }
+
 double pop(void)
 {
     if (sp > 0)
@@ -285,14 +261,16 @@ double pop(void)
         printf("error: stack empty\n");
         return 0.0;
     }
-} 
+}
+
 double stack_top(void)
 {
-    val[sp - 1];
+    return val[sp - 1];
 }
 void dublicate(void)
 {
-    val[sp++] = val[sp - 1];
+    val[sp] = val[sp - 1];
+    sp++;
 }
 void swap(void)
 {
@@ -309,19 +287,22 @@ void free_stack(void)
     }
     sp = 0;
 }
-void get_line(char charline[], int maxline) 
-{
-    int l = 0, c = 0;
 
-    for (l = 0; --maxline > 0 && (c = getchar()) != EOF && c!= '\n';)
+void get_line(char *charline, int maxlen) 
+{
+    int c = 0;
+
+    for (; --maxlen > 0 && (c = getchar()) != EOF && c!= '\n';)
     {
-        charline[l] = c;
-        l++;
+        *charline++ = c;
     }
     if (c == '\n')
     {
-        charline[l] = c;
-        l++;
+        *charline++ = c;
+        *charline = '\0';
     }
-    charline[l] = '\0';
+    if(c == EOF)
+    {
+       *charline = '\0';
+    }
 }
