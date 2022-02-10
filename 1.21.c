@@ -40,15 +40,17 @@ int get_line (char s[], int max)
 }
 void entab (char s_edited[], char s[])
 {
-    int i = 0, j = 0, b_count = 0, t_count = 0;
+    int i = 0;
+    int j = 0;
+    int b_count = 0;
+    int t_count = 0;
     int s_count = 1;
 
     while (s[j] != '\0')
     {
         if (s[j] == ' ')
         {
-
-            if (s_count % TAB != 0)
+            if (s_count % TAB)
             {
                 b_count++;
                 j++;
@@ -56,15 +58,14 @@ void entab (char s_edited[], char s[])
             else
             {
                 t_count++;
-                b_count = 0;
                 j++;
-                 s_count = 1;
-
+                b_count = 0;
+                printf("t_count is %d\n", t_count);
             }
         }
         else if (s[j] != ' ')
         {
-            if (t_count > 0)
+            if (t_count)
             {
                 while (t_count > 0)
                 {
@@ -73,21 +74,23 @@ void entab (char s_edited[], char s[])
                     t_count--;
                 }
             }
-            if (b_count > 0)
+            if (b_count)
             {
-                while (b_count > 0)
+                while (b_count)
                 {
                     s_edited[i] = ' ';
                     i++;
                     b_count--;
                 }
             }
-
-            s_edited[i] = s[j];
-
             if (s[j] == '\t')
             {
-                s_count = TAB - (s_count % TAB); 
+                s_edited[i] = s[j];
+                s_count = s_count + (TAB - (s_count % TAB)); 
+            }
+            else
+            {
+                s_edited[i] = s[j];
             }
             i++;
             j++;
