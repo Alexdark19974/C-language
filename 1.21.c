@@ -69,7 +69,7 @@ void entab (char s_edited[], char s[])
             {
                 while (t_count > 0)
                 {
-                    s_edited[i] = '\t';
+                    s_edited[i] = 't';
                     i++;
                     t_count--;
                 }
@@ -78,7 +78,7 @@ void entab (char s_edited[], char s[])
             {
                 while (b_count)
                 {
-                    s_edited[i] = ' ';
+                    s_edited[i] = 'b';
                     i++;
                     b_count--;
                 }
