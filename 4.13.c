@@ -1,13 +1,12 @@
 #include <stdio.h>
-#ifndef SWAP
 #define SWAP(t, x, y) \
 {\
     t temp = x;\
     x = y;\
     y = temp;\
-    printf("%d %d", x, y);\
+\
+    printf("%g %g", x, y);\
 }
-#endif
 
 /*Define a macro swap(t,x,y) that interchanges two arguments of type t . (Block structure will help.)*/
 
