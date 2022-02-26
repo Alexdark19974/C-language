@@ -25,6 +25,7 @@ int main(void) // convert declarations to words
 {
     while (get_token() != EOF) // the 1st token from string
     {
+
         if (token_type == TYPE)
         {
              strcpy(data_type, token); //data type
@@ -34,6 +35,7 @@ int main(void) // convert declarations to words
             printf("error: missing type\n");
             return 0;
         }
+
         out[0] = '\0';
 
         dcl(); // parsing the rest of the string
@@ -117,7 +119,7 @@ void dirdcl (void)
     {
         return;
     }
-    
+
     while ((type = get_token()) == PARENS || type == BRACKETS)
     {
         if (type == PARENS)
@@ -202,20 +204,20 @@ int get_token (void)
                     ungetch(*ptr);
 
                     *ptr = '\0';
-                    
-                    return token_type = NAME; 
+
+                    return token_type = NAME;
                 }
                 case '[':
                 {
                     ungetch(*ptr);
-                    
+
                     *ptr = '\0';
-                    
+
                     return token_type = NAME;
                 }
             }
         }
- 
+
         if (*ptr == ']')
         {
             return token_type = *ptr;
@@ -235,7 +237,13 @@ int get_token (void)
             }
         }
 
+         if (*ptr == '\n')
+        {
+            ungetch(*ptr);
+        }
+
         *ptr = '\0';
+
         ptr = token;
 
         if (strcmp("char", ptr) == 0|| strcmp("int", ptr) == 0 || strcmp("double", ptr) == 0 || strcmp("long", ptr) == 0 || strcmp("float", ptr) == 0 || strcmp("void", ptr) == 0)
@@ -243,6 +251,7 @@ int get_token (void)
             return token_type = TYPE;
         }
         return token_type = NAME;
+
     }
     return token_type = c;
 }
@@ -259,6 +268,6 @@ void ungetch(int c)
     }
     else
     {
-        buf[bufp++] = c;   
+        buf[bufp++] = c;
     }
 }
