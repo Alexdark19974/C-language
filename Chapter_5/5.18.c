@@ -5,7 +5,7 @@
 #define MAXTOKEN 100
 #define BUFSIZE 1000
 
-enum {NAME, PARENS, BRACKETS};
+enum {NAME, PARENS, BRACKETS, TYPE};
 
 char buf[BUFSIZE];
 int bufp = 0;
@@ -25,7 +25,15 @@ int main(void) // convert declarations to words
 {
     while (get_token() != EOF) // the 1st token from string
     {
-        strcpy(data_type, token); //data type
+        if (token_type == TYPE)
+        {
+             strcpy(data_type, token); //data type
+        }
+        else
+        {
+            printf("error: missing type\n");
+            return 0;
+        }
         out[0] = '\0';
 
         dcl(); // parsing the rest of the string
@@ -228,13 +236,13 @@ int get_token (void)
         }
 
         *ptr = '\0';
+        ptr = token;
 
-        if (strcmp("char", ptr) || strcmp("int", ptr) || strcmp("double", ptr) || strcmp("long", ptr) || strcmp("float", ptr))
+        if (strcmp("char", ptr) == 0|| strcmp("int", ptr) == 0 || strcmp("double", ptr) == 0 || strcmp("long", ptr) == 0 || strcmp("float", ptr) == 0)
         {
-            c = NAME;
+            return token_type = TYPE;
         }
-
-        return token_type = c;
+        return token_type = NAME;
     }
     return token_type = c;
 }
