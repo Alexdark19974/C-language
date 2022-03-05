@@ -4,34 +4,36 @@
 #include <ctype.h>
 
 #define MAXTOKEN 100
+#define MAXNAME 25
+#define DATASIZE 25
+#define OUTSIZE 100
 #define BUFSIZE 100
+#define TEMPSIZE 100
 
-enum { NAME, PARENS, BRACKETS };
-
-void dcl(void);
-void dirdcl(void);
+enum { NAME, PARENS, BRACKETS, TYPE };
 
 char buf[BUFSIZE]; /* buffer for ungetch */
 int bufp = 0; /* next available position in buf */
 
 int gettoken(void);
-int tokentype;             /* type of last token */
-char token[MAXTOKEN];      /* last token string */
-char name[MAXTOKEN];       /* identifier name */
-char datatype[MAXTOKEN];   /* data type = char, int, etc. */
-char out[1000];            /* output string */
 
+int tokentype = 0;          /* type of last token */
+char token[MAXTOKEN];       /* last token - лексема string */
+char name[MAXNAME];         /* the name of the (identifier) */
+char data_type[DATASIZE];   /* type of data : char, int, etc. */
+char out[OUTSIZE];          /* resulting string */
 
-main() /* undcl:  convert words to declarations */
+int main(void) /* convert declarations to words */
 {
     int type = 0;
-    char temp[MAXTOKEN];
+    char temp[TEMPSIZE];
 
-    while (gettoken() != EOF) {
-        strcpy(out, token);
+    while (gettoken() != EOF) { /* 1st token from string */
+        strncpy(out, token, sizeof(out));
+        temp[sizeof(out) - 1] = '\0';
         while ((type = gettoken()) != '\n')
             if (type == PARENS || type == BRACKETS)
-                strcat(out, token);
+                strcat(out, token); 
             else if (type == '*') {
                 sprintf(temp, "(*%s)", out);
                 strcpy(out, temp);
@@ -45,39 +47,86 @@ main() /* undcl:  convert words to declarations */
     return 0;
 }
 
-int gettoken(void) /* returns next token */
+int gettoken(void)
 {
-    int c, getch(void); /* getch: get a (possibly pushed back) character */
-    void ungetch(int); /* ungetch:  push character back on input */
-    char *p = token;
+    int c = 0;
+    int getch(void);
+    void ungetch(int);
+    char *ptr = token;
+    static int first_round_bracket = 0;
 
-    while ((c = getch()) == ' ' || c== '\t') /* skip white space */
+    while ((c = getch()) == ' ' || c == '\t')
         ;
-	if (c == '(')
-	{
-    	if ((c = getch()) == ')') {
-			strcpy(token, "()");
-	        return tokentype = PARENS;
-        } else {
+
+    if (c == '(') {
+        first_round_bracket = 1;
+        if ((c = getch()) == ')') {
+            first_round_bracket = 0;
+            return tokentype = PARENS;
+        } else
+            if (!isalnum(c) && c != '*')
+                printf("error: missing ')'\n");
+                exit(0);
             ungetch(c);
             return tokentype = '(';
-        }
-    } else if (c== '[') {
-        for (*p++ = c; (*p++ = getch()) != ']'; )
-			;
-        *p = '\0';
+    } else if (c == '[') {
+        *ptr = c;
+         ptr++;
+
+        for (*ptr = c; (*ptr = getch()) != ']' && *ptr != '\n';)
+            ptr++;
+
+        if (*ptr != ']')
+          printf ("error: missing ']'\n");
+          exit(0);
+
+        ++ptr;
+        *ptr = '\0';
+
         return tokentype = BRACKETS;
-    } else if (isalpha(c)) {
-        for (*p++ = c; isalnum(c=getch()); )
-			*p++ = c;
-        *p = '\0';
-		ungetch(c);
+     } else if (isalpha(c)) {
+        *ptr = c;
+        ptr++;
+
+        for (*ptr = c; (*ptr = getch()) != ' ' && *ptr != ')' && *ptr != ']' && *ptr != '\n'; ptr++) {
+            switch (*ptr) {
+                case '(':
+                    first_round_bracket = 1;
+                    ungetch(*ptr);
+                    *ptr = '\0';
+                    return tokentype = NAME;
+                case '[':
+                    ungetch(*ptr);
+                    *ptr = '\0';
+                    return tokentype = NAME;
+            }
+        }
+
+        if (*ptr == ']')
+            return tokentype = *ptr;
+        else if (*ptr == ')') {
+            if (!first_round_bracket)
+                return tokentype = *ptr;
+            else
+                ungetch(*ptr);
+                *ptr = '\0';
+                first_round_bracket = 0;
+                return tokentype = NAME;
+        }
+
+        if (*ptr == '\n')
+            ungetch(*ptr);
+        *ptr = '\0';
+        ptr = token;
+
+        if (strcmp("char", ptr) == 0|| strcmp("int", ptr) == 0 || strcmp("double", ptr) == 0 || strcmp("long", ptr) == 0 || strcmp("float", ptr) == 0 || strcmp("void", ptr) == 0)
+            return tokentype = TYPE;
         return tokentype = NAME;
-	} else
-       return tokentype = c;
+    }
+    return tokentype = c;
 }
 
-int getch(void) /* get a (possibly pushed back) character */
+int getch(void)
 {
     return (bufp > 0) ? buf[--bufp] : getchar();
 }
@@ -87,5 +136,6 @@ void ungetch(int c)
     if (bufp >= BUFSIZE)
         printf("ungetch: too many characters\n");
     else
-        buf[bufp++] = c;
+       buf[bufp] = c;
+       bufp++;
 }
