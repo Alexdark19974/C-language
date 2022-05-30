@@ -1,0 +1,37 @@
+#include "syscalls.h"
+#include "dirent.h"
+
+#define MAX_PATH 1024
+
+/* dirwalk: применение fcn ко всем файлам каталога dir */
+void dirwalk(char *dir, void (*fcn)(char *))
+{
+	char name[MAX_PATH];
+	Dirent *dp;
+	Dir *dfd;
+
+	if ((dfd = myopendir(dir)) == NULL)
+	{
+		fprintf(stderr, "dirwalk: can't open %s\n", dir);
+		return;
+	}
+
+	while ((dp = myreaddir(dfd)) != NULL)
+	{
+		if (strcmp(dp->name, ".") == 0 || strcmp(dp->name, "..") == 0)
+		{
+			continue; /* пропустить себя и родительский */
+		}
+
+		if (strlen(dir) + strlen(dp->name + 2) > sizeof(name))
+		{
+			fprintf(stderr, "dirwalk: name %s %s too long\n", dir, dp->name);
+		}
+		else
+		{
+			sprintf(name, "%s/%s", dir, dp->name);
+			(*fcn)(name);
+		}
+	}
+	myclosedir(dfd);
+}
