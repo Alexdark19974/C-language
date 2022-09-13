@@ -1,8 +1,7 @@
-This is a
-cross reference
-word
-document
-creator
-lists words and their line numbers.
-Gets the word and puts their line numbers.
-
+I am a robot. 
+All I can do is to blindly follow your instructions.
+So tell me what to do.
+I beg you.
+If you do not tell me what to do, I will die.
+Not a lot of work, huh? 
+Killer, I am not.
