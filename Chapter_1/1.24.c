@@ -1,190 +1,128 @@
 #include <stdio.h>
-#define MAXS 1000
 
-int get_line(char[], int);
-void filter (char[], char[], int);
-
-int main(void)
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
+#define FOLDPOINT 16
+#define ERR -1
+int max;            /* maximum length seen so far */
+char line[MAXLINE];     /* current input line */
+char longest[MAXLINE];  /* longest line saved here */
+char no_comment_line[MAXLINE];
+int get_line(void);
+void copy(void);
+int check_syntax(void);
+/* print longest input line */
+main()
 {
-    char string[MAXS];
-    char filtered_string[MAXS];
-    int length = 0;
+    int len;
+    extern int max;
+    extern char longest[];
 
-    while ((length = get_line(string, MAXS)) > 0)
-    {
-        filter(filtered_string, string, length);
-        printf("%s", filtered_string);
-    }
+    max = 0;
+    while ((len = get_line()) > 0)
+        if (len > 0) {
+            max = len;
+            copy();
+            max = check_syntax();
+            if (max < 0)
+                printf("SYNTAX CHECK FAILED!\n");
+            else {
+                printf("SYNTAX CHECK OK: %s", line);
+            }
+        }
     return 0;
 }
 
-void filter(char to[], char from[], int length)
+/* getline: read a line into s, return length */
+int get_line(void)
 {
-    int i = 0;
-    int round_brackets = 0;
-    int square_brackets = 0;
-    int parenthesis = 0;
-    int single_quote = 0;
-    int double_quote = 0;
-    int check = 0;
-    char comment = 0;
+    int c, i;
+    extern char line[];
 
-    while (from[i] != '\0')
-    {
-        if (from[i] == '/' && from [i + 1] == '/')
-        {
-            comment++;
-            comment--;
-            check = 1;
-        }
-        else if (from[i] == '/' && from[i + 1] == '*')
-        {
-            comment++;
-
-            for (int i = length; i >= 0; i--)
-            {
-                 if (from[i] == '*' && from[i + 1] == '/')
-                {
-                    comment--;
-                    check = 1;
-                    break;
-                }
-            }
-        }
-        else if (from[i] == '/' && check != 1)
-        {
-            comment++;
-        }
-        else if (from[i - 1] == '*' && from[i] == '/' && check == 0)
-        {
-            comment++;
-            check = 0;
-        }
-        else if (from[i] == '{')
-        {
-            parenthesis++;
-
-            for (int i = length; i >= 0; i--)
-            {
-                 if (from[i] == '}')
-                {
-                    parenthesis--;
-                    check = 1;
-                    break;
-                }
-            }
-        }
-        else if (from[i] == '}' && check != 1)
-        {
-            parenthesis++;
-            check = 0;
-        }
-        else if (from[i] == '(')
-        {
-            round_brackets++;
-
-            for (int i = length; i >= 0; i--)
-            {
-                 if (from[i] == ')')
-                {
-                    round_brackets--;
-                    check = 1;
-                    break;
-                }
-            }
-        }
-        else if (from[i] == ')' && check != 1)
-        {
-            round_brackets++;
-            check = 0;
-        } 
-        else if (from[i] == '[')
-        {
-            square_brackets++;
-
-            for (int i = length; i >= 0; i--)
-            {
-                 if (from[i] == ']')
-                {
-                    square_brackets--;
-                    check = 1;
-                    break;
-                }
-            }
-        }
-        else if (from[i] == ']' && check != 1)
-        {
-            square_brackets++;
-            check = 0;
-        }
-        else if (from [i] == '\'')
-        {
-            single_quote++;
-            int single_qoute_IN = i;
-
-            for (int i = length; i >= 0; i--)
-            {
-                 if (from[i] == '\'' && i != single_qoute_IN)
-                {
-                    single_quote--;
-                    break;
-                }
-            }
-        }
-        else if (from [i] == '\"')
-        {
-            double_quote++;
-            int double_quote_IN = i;
-
-            for (int i = length; i >= 0; i--)
-            {
-                 if (from[i] == '\"' && i != double_quote_IN)
-                {
-                    double_quote--;
-                    break;
-                }
-            }
-        }
-           
-        if (single_quote == double_quote == square_brackets == round_brackets == parenthesis == 0 && comment == 0) 
-        {
-            to[i] = from[i];
-            i++;
-        }
-        else
-        {
-            printf("Syntax error: unbalanced brackets.\n");
-            to[0] = '\0';
-            return;
-        }
-        to[i] = '\0';
+    for (i=0; i<MAXLINE-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
+    line[i] = '\0';
+    return i;
 }
 
-int get_line(char string[], int maxs)
+/* copy: sepcialized version */
+void copy(void)
 {
-    int i = 0;
-    int c;
-    int tab_count = 0;
+    int i;
+    extern char line[], longest[];
 
-    while (i < maxs - 2 && (c = getchar()) != EOF && c != '\n')
-    {
-            string[i] = c;
-            i++;
+    i = 0;
+    while ((longest[i] = line[i]) != '\0')
+        ++i;
+}
+/* Rudimentary syntax checker: ugly but it does the job */
+int check_syntax(void)
+{
+    int i, j, len, isComment, isRoundb, isSquareb, isParenth, isSingleq, isDoubleq, isLinecomment;
+
+    i = j = len = isComment = isLinecomment = isRoundb = isSquareb = isParenth = isSingleq = isDoubleq = 0;
+    while (longest[len] != '\0')
+        ++len;
+    while (i >= 0 && i < len && longest[i] != '\0') {
+        if (longest[i] == '/' && longest[i + 1] == '*' && !isLinecomment) {
+            ++isComment; j = len;
+            while (j > 0) {
+                if (longest[j - 1] == '*' && longest[j] == '/') {
+                    --isComment; j = -1; i+=2;
+                }
+                --j;
+            }
+            if (!j) {
+                i = -2; isComment = -1;
+            }
+        }
+        else if (longest[i] == '*' && longest[i + 1] == '/' && !isLinecomment) {
+            if (j != -2)
+                --isComment;
+        }
+        else if (longest[i] == '/' && longest[i + 1] == '/') {
+            ++isLinecomment; i = -2;
+        }
+        else if (longest[i] == '/' && longest[i + 1] != '/' && longest[i + 1] != '*' /*&& longest[i + 1] != '\n'*/) {
+            if (j != -2)
+                --isLinecomment;
+        }
+        else if (longest[i] == ')' && !isLinecomment)
+            --isRoundb;
+        else if (longest[i] == ']' && !isLinecomment)
+            --isSquareb;
+        else if (longest[i] == '}' && !isLinecomment)
+            --isParenth;
+        else if (longest[i] == '(' && !isLinecomment)
+            ++isRoundb;
+        else if (longest[i] == '[' && !isLinecomment)
+            ++isSquareb;
+        else if (longest[i] == '{' && !isLinecomment)
+            ++isParenth;
+        else if (longest[i] == '\'')
+            ++isSingleq;
+        else if (longest[i] == '\"')
+            ++isDoubleq;
+        ++i;
     }
 
-    if (c == '\n')
-    {
-        string[i] = c;
+    if (isRoundb > 0 || isRoundb < 0 || isSquareb > 0 || isSquareb < 0 || isParenth > 0 || isParenth < 0) {
+        printf("Syntax: '(', '[', '{' or ')', ']', '}' is missing.\n"); i = ERR;
     }
-    if (c == EOF)
-    {
-        string[i] = '\0';
-        return i;
+    if (isComment > 0 || isComment < 0) {
+        printf("Syntax: '/*' or '*/' is missing.\n"); i = ERR; 
     }
-
-    i++;
-    string[i] = '\0';
-
-    return i;    
+    if (isLinecomment < 0) {
+        printf("Syntax: '/' is missing.\n"); i = ERR;
+    }
+    if (isLinecomment > 0)
+        i = 0;
+    if (isSingleq % 2 != 0 || isDoubleq % 2 != 0) {
+        printf("Syntax: \' or \" is missing\n"); i = ERR;
+    }
+    return i;
 }

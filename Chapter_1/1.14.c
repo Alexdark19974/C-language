@@ -1,98 +1,172 @@
 #include <stdio.h>
-#define MAXSIZE 255
 
-void symbol_display_horizontal (int array[])
+/* count digits, white space, others */
+main()
 {
-    puts("\nHorizontal symbol count\n");
-    puts("-----------------------\n");
-    for (int i = 0; i < MAXSIZE; i++)
-    {
-        if (array[i] > 0)
-        {
-            if (i < 100)
-            {
-                printf(" %d: ", i + 1);
+    int c, i, j, tmp, nwhite, nline, nother, nchar, ntab, nexclam, nquest;
+    int ndigit[10];
+    int nwordlen[100];
+    nwhite = nother = nline = nchar = nexclam = nquest = ntab = 0;
+    for (i = 0; i < 10; ++i)
+        ndigit[i] = 0;
+    for (i = 0; i < 100; ++i)
+        nwordlen[i] = 0;
+    i = 0;
+    while ((c = getchar()) != EOF)
+        if (c >= '0' && c <= '9')
+            ++ndigit[c-'0'];
+        else if (c == ' ' || c == '\n' || c == '\t') {
+            if (nchar) {
+                nwordlen[i] = nchar;
+                ++i;
+                if (i == 99) {
+                    printf("warning: the end of an array has been reached.\nAt this point, it will rewrite itself starting at index 0.\n");
+                    i = 0;
+                }
             }
-            else
-            {
-                printf("%d: ", i + 1);
-            }
 
-            for (int j = 0; j < array[i]; j++)
-            {
-               printf("# ");
-            }
-            puts("");
+            if (c == ' ')
+                ++nwhite;
+            else if (c == '\t')
+                ++ntab;
+            else if (c == '\n')
+                ++nline;
+            nchar = 0;
         }
-        else
-        {
-            continue;
+        else {
+            ++nother;
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                ++nchar;
+            else if (c == '?')
+                ++nquest;
+            else if (c == '!')
+                ++nexclam;
         }
-    }
-}
+   printf("digits = ");
+   for (i = 0; i < 10; ++i)
+       printf(" %d", ndigit[i]);
+   printf(", white space = %d, new line = %d, tab = %d, question mark = %d, exclamation mark = %d\n",
+       nwhite, nline, ntab, nquest, nexclam);
+   printf("         ");
+   for (i = 0; i < 10; ++i)
+       printf(" %d", i);
+   putchar('\n');
+   printf("----Horizontal histogram-----\n"); 
+   for (i = 0; nwordlen[i] != 0; ++i) {
+       printf("word%d: ", i + 1);
+       for (c = nwordlen[i]; c > 0; --c)
+           printf("#");
+       putchar('\n');
+   }
+   
+   i = nexclam;
+   printf("!:");
+   while (i) {
+       printf(" #");
+       --i;
+   }
+   putchar('\n');
+   i = nquest;
+   printf("?:");
+   while (i) {
+       printf(" #");
+       --i;
+   }
+   putchar('\n');
+   i = nwhite;
+   printf("\' \':");
+   while (i) {
+       printf(" #");
+       --i;
+   }
+   putchar('\n');
+   i = ntab;
+   printf("\\t:");
+   while (i) {
+       printf(" #");
+       --i;
+   }
+   putchar('\n');
+   i = nline;
+   printf("\\n:");
+   while (i) {
+       printf(" #");
+       --i;
+   }
+   putchar('\n');
+   printf("----Vertical histogram----\n");
 
-void symbol_display_vertical (int array[], int max_length_count)
-{
-    puts("\nVertical symbol count\n");
-    puts("-----------------------\n");
+   printf(" !  ?  \' \' \\t   \\n");
+   for (nother = 0; nwordlen[nother] != 0; ++nother)
+       printf(" word%d", nother + 1);
+   putchar('\n');
+   tmp = nother;
+   for (i = 0; tmp > 0; i++) {
+       tmp = nother;
+       if (nexclam > 0) {
+           printf(" # ");
+           --nexclam;
+       } else
+           printf("   ");
+       if (nquest > 0) {
+           printf(" # ");
+           --nquest;
+       } else
+           printf("   ");
+       if (nwhite > 0) {
+           printf("  # ");
+           --nwhite;
+       } else
+           printf("    ");
+       if (ntab > 0) {
+           printf("  #   ");
+           --ntab;
+       } else
+           printf("      ");
+       if (nline > 0) {
+           printf(" #  ");
+           --nline;
+       } else
+           printf("    ");
 
-    for (int i = 0; i < max_length_count; i++)
-    {
-        for (int j = 0; j < MAXSIZE; j++)
-        {
-          if (array[j] < 1)
-          {
-            continue;
-          }
+       for (j = 0; tmp != 0 && nwordlen[j] != 0; j++) {
+           if (nwordlen[j] > i)
+               printf("  #   "); 
+           else {
+               printf("      ");
+               --tmp;
+           }
+       }
+       putchar('\n');
+   }
 
-            if (array[j] >= max_length_count - i)
-            {
-                printf(" #   ");
-            }
-            else 
-            {
-               printf("     ");
-            }
-        }
-        puts("\n");
-    }
-
-   for (int i = 0; i < MAXSIZE; i++)
-    {
-        if (array[i] > 0 && i < 100)
-        {
-            printf(" %d  ", i + 1);
-        }
-        else if (array[i] > 0 && i > 100)
-        {
-          printf(" %d ", i + 1);
-        }
-    }
-}
-
-int main(void) 
-  { 
-    char c; 
-    int array[MAXSIZE] = {0}; 
-    int max_length_count = 0; 
-    int counter = 0; 
-
-    while((c = getchar()) != EOF && c < MAXSIZE) 
-    {
-        if (c >= 0 && c <= 255)
-        {
-            array[c]++;
-        } 
-    }
-    for (int i = 0; i < MAXSIZE; i++)
-    {
-        if (max_length_count < array[i] && array[i] > 0)
-        {
-            max_length_count = array[i];
-        }
-    }
-    symbol_display_horizontal(array);
-    symbol_display_vertical (array, max_length_count);
-    
-    return 0;
+   for (; nexclam > 0 || nquest > 0 || nwhite > 0 || ntab > 0 || nline > 0 ;) {
+       if (nexclam > 0) {
+           printf(" ? ");
+           --nexclam;
+       } else
+           printf("   ");
+       if (nquest > 0) {
+           printf(" ?  ");
+           --nquest;
+       } else
+           printf("    ");
+       if (nwhite > 0) {
+           printf(" ? ");
+           --nwhite;
+       } else
+           printf("   ");
+       if (ntab > 0) {
+           printf("  ?");
+           --ntab;
+       } else
+           printf("   ");
+       if (nline > 0) {
+           printf("    ? ");
+           --nline;
+       } else
+           printf("    ");
+       putchar('\n');
+   }
+   putchar('\n');
 }

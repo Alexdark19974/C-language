@@ -1,22 +1,15 @@
 #include <stdio.h>
-#define FARMIN  0
-#define FARMAX  300
-#define STEP    20
-/* create chart of farenheits to celcius and backwards*/
 
-#include <stdio.h>
-
-int fahr_to_celc(int, int, int);
 /* print Fahrenheit-Celsius table 
     for fahr = 0, 20, ..., 300; floating-point version */
 main()
 {
-    fahr_to_celc(FARMIN, FARMAX, STEP);
-}
-
-int fahr_to_celc(int lower, int upper, int step)
-{
     float fahr, celsius;
+    int lower, upper, step;
+
+    lower = 0;        /* lower limit of temperature table */
+    upper = 300;      /* upper limit */
+    step = 20;        /* step size */
 
     fahr = lower;
     printf("-----Fahrenheit-Celsius table-----\n");
@@ -25,5 +18,4 @@ int fahr_to_celc(int lower, int upper, int step)
         printf("%3.0f %6.1f\n", fahr, celsius);
         fahr = fahr + step;
     }
-    return 0;
 }

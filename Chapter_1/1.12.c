@@ -1,19 +1,13 @@
 #include <stdio.h>
-int main(void)
+
+main()
 {
     int c;
-    while ((c = getchar()) != EOF)
-    {
-        if (c != ' ')
-        {
+
+    while ((c = getchar()) != EOF) {
+        if (c != ' ' && c != '\n')
             putchar(c);
-        }
         else
-        {
-            printf("\n");
-        }
+            putchar('\n');
     }
-
-
-    return 0;
 }

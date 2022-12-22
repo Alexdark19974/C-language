@@ -1,75 +1,77 @@
 #include <stdio.h>
-#define MAXL 1000
-#define TAB 8
-int get_line (char[], int);
-void detab (char[], char[]);
-int main (void)
+
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
+int max;            /* maximum length seen so far */
+char line[MAXLINE];     /* current input line */
+char longest[MAXLINE];  /* longest line saved here */
+char detabed_line[MAXLINE];
+int get_line(void);
+void copy(void);
+void detab(void);
+/* print longest input line */
+main()
 {
-    char s[MAXL];
-    char s_edited[MAXL];
     int len;
-    while ((len = get_line(s, MAXL)) > 0)
-    {
-        if (len > 0)
-        {
-            detab(s_edited, s);
-            printf("%s", s_edited);   
+    extern int max;
+    extern char longest[];
+
+    max = 0;
+    while ((len = get_line()) > 0)
+        if (len > 0) {
+            max = len;
+            copy();
+            detab();
+            printf("detabed line: %s\n", detabed_line);
         }
-    }
     return 0;
 }
-int get_line (char s[], int max)
+
+/* getline: read a line into s, return length */
+int get_line(void)
 {
-    int c, i = 0;
-    for (i = 0; i < MAXL - 2 && (c = getchar()) != EOF && c != '\n'; i++)
-    {
-        s[i] = c;
+    int c, i;
+    extern char line[];
+
+    for (i=0; i<MAXLINE-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
-    if (c == '\n')
-    {
-        s[i] = c;
-    }
-    else if (c == EOF)
-    {
-        s[i] = '\0';
-        puts("");
-        return i;
-    }
-    i++;
-    s[i] = '\0';
+    line[i] = '\0';
     return i;
 }
-void detab (char s_edited[], char s[])
+
+/* copy: sepcialized version */
+void copy(void)
 {
-    int i = 0;
-    int count = 0;
-    int j = 0;
+    int i;
+    extern char line[], longest[];
 
-    while (s[j] != '\0')
-    {
-        if (s[j] == '\t')
-        {
+    i = 0;
+    while ((longest[i] = line[i]) != '\0')
+        ++i;
+}
 
-            int res = TAB - (count % TAB);
+void detab(void)
+{
+    int i, j, counter;
 
-            printf("blanks to put are %d\n", res);
-
-            while (res > 0)
-            {
-                s_edited[i] = 'b';
-                i++;
-                res--;
+    i = j = counter = 0;
+    while (longest[i] != '\0') {
+        detabed_line[j] = longest[i];
+        if (longest[i] == '\t') {
+            while (counter < TABSTOP) {
+                detabed_line[j] = 'b'; // in order to make it easier, ' ' is replaced with 'b'
+                ++counter; ++j;
             }
-            count = 0;
-            j++;
+            --j; // to counteract one extra increment from the nested while loop
+            counter = -1; // next increment will make it 0
         }
-        else
-        {
-            s_edited[i] = s[j];
-            i++;
-            j++;
-            count++;
-        }
+        ++counter; ++i; ++j;
+        if (counter == TABSTOP)
+            counter = 0;
     }
-    s_edited[i] = '\0';
+    detabed_line[j] = '\0';
 }

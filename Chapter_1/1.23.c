@@ -1,113 +1,84 @@
 #include <stdio.h>
-#define LLIMIT 1000
-int get_line (char[], int);
-void remove_comments(char[], char[], int);
-/* Write a program to remove all comments from a C program. Don’t forget to handle quoted strings and character constants properly. C comments don’t nest. */
 
-int main (void)
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
+#define FOLDPOINT 16
+int max;            /* maximum length seen so far */
+char line[MAXLINE];     /* current input line */
+char longest[MAXLINE];  /* longest line saved here */
+char no_comment_line[MAXLINE];
+int get_line(void);
+void copy(void);
+void rm_comment(void);
+/* print longest input line */
+main()
 {
-    char string[LLIMIT];
-    char string_removed_comments[LLIMIT];
-    int length = 0;
-    int quote = 0;
-    int unquote = 0;
+    int len;
+    extern int max;
+    extern char longest[];
 
-    while ((length = get_line(string, LLIMIT)) > 0)
-    {
-        remove_comments(string_removed_comments, string, length);
-        printf("%s", string_removed_comments);
-    }
+    max = 0;
+    while ((len = get_line()) > 0)
+        if (len > 0) {
+            max = len;
+            copy();
+            rm_comment();
+            printf("line w/o comments: %s", no_comment_line);
+        }
     return 0;
 }
 
-int get_line(char string[], int maxs)
+/* getline: read a line into s, return length */
+int get_line(void)
 {
-    int i = 0;
-    int c;
-    int tab_count = 0;
+    int c, i;
+    extern char line[];
 
-    while (i < maxs - 2 && (c = getchar()) != EOF && c != '\n')
-    {
-            string[i] = c;
-            i++;
+    for (i=0; i<MAXLINE-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
-
-    if (c == '\n')
-    {
-        string[i] = c;
-    }
-    if (c == EOF)
-    {
-        string[i] = '\0';
-        return i;
-    }
-
-    i++;
-    string[i] = '\0';
-
-    return i;    
+    line[i] = '\0';
+    return i;
 }
 
-void remove_comments (char to[], char from[], int length)
+/* copy: sepcialized version */
+void copy(void)
 {
-    int i = 0;
-    int j = 0;
-    int s = length;
-    int commentIN = 0;
-    int commentOUT = 0;
-    int left = 0;
-    int right = 0;
-    int quote = 0;
-    int unquote = 0;
+    int i;
+    extern char line[], longest[];
 
-    while (from[i] != '\0')
-    {
-        if (from[i] == '\"')
-        {
-            quote++;
-            for (int i = s; i > 0; i--)
-            {
-                if (from[i] == '\"')
-                {
-                    quote++;
-                    break;
-                }
-            }
-        }
-        if (from[i] == '/' && from[i + 1] == '/' && quote != 2)
-        {
-            while (from[i] != '\0')
-            {
-                i++;
-            }
-        }
-        
-        else if (from[i] == '/' && from[i + 1] == '*' && from[i + 2] != '/' && quote != 2)
-        {
-                commentIN++;
-                left = i;
-
-            for (int i = s; i >= 0; i--)
-            {
-                if (from[i - 2] != '/' && from[i - 1] == '*' && from[i] == '/')
-                {
-                    commentOUT++;
-                    right = i;
-                    break;
-                }
-            }
-        }
-        if (commentIN == 1 && commentOUT == 1)
-        {
-            while (left <= right)
-            {
-                i++;
-                left++;
-            }
-        }
-        to[j] = from[i];
-        j++;
-        i++;
+    i = 0;
+    while ((longest[i] = line[i]) != '\0')
+        ++i;
 }
-    to[j] = '\0';
+
+void rm_comment(void)
+{
+    int i, j, len, isComment = 0;
+
+    i = j = len = 0;
+    while (longest[i] != '\0') {
+
+        if (longest[i] == '/' && longest[i + 1] == '/') {
+            while (longest[i] != '\n' && longest[i] != '\0') {
+                ++i;
+            }
+        }
+        else if (longest[i] == '/' && longest[i + 1] == '*') {
+            for (len = i; !isComment  &&  longest[len] != '\0'; ++len) {
+                if (((i + 1) != len && i != (len + 1)) && longest[len + 1] != '\0' && longest[len] == '*' && longest[len + 1] == '/')
+                    isComment = len + 2;
+            }
+            if (isComment)
+                i = isComment;
+        }
+        no_comment_line[j] = longest[i];
+        if (longest[i] != '\0') {
+            ++i; ++j; isComment = 0;
+        }
+    }
+    no_comment_line[j] = '\0';
 }

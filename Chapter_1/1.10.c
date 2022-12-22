@@ -2,26 +2,15 @@
 int main(void)
 {
     int c;
-    while((c = getchar()) != EOF)
-    {
 
-        if(c == '\t')
-        {
+    while((c = getchar()) != EOF) {
+        if (c == '\t')
             printf("\\t");
-        }
-        else if(c == '\b')
-        {
+        if (c == '\b')
             printf("\\b");
-        }
-        else if(c == '\\')
-        {
+        if (c == '\\')
             printf("\\\\");
-        }
-        else if(c == ' ')
-        {
-            printf(" ");
-        }
-        putchar(c);
+        if (c == ' ')
+            printf("\' \'");
     }
-    return 0;
 }

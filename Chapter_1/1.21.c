@@ -1,102 +1,96 @@
 #include <stdio.h>
-#define MAXL 1000
-#define TAB 8
 
-int get_line (char[], int);
-void entab (char[], char[]);
-
-int main (void)
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
+int max;            /* maximum length seen so far */
+char line[MAXLINE];     /* current input line */
+char longest[MAXLINE];  /* longest line saved here */
+char entabbed_line[MAXLINE];
+int get_line(void);
+void copy(void);
+void entab(void);
+/* print longest input line */
+main()
 {
-    char s[MAXL], s_edited[MAXL];
     int len;
-    while ((len = get_line(s, MAXL)) > 0)
-    {
-        entab(s_edited, s);
-        printf("%s", s_edited);   
-    }
+    extern int max;
+    extern char longest[];
+
+    max = 0;
+    while ((len = get_line()) > 0)
+        if (len > 0) {
+            max = len;
+            copy();
+            entab();
+            printf("entabbed line: %s\n", entabbed_line);
+        }
     return 0;
 }
-int get_line (char s[], int max)
-{
-    int c, i = 0;
 
-    for (i = 0; i < MAXL - 2 && (c = getchar()) != EOF && c != '\n'; i++)
-    {
-        s[i] = c;
+/* getline: read a line into s, return length */
+int get_line(void)
+{
+    int c, i;
+    extern char line[];
+
+    for (i=0; i<MAXLINE-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
-    if (c == '\n')
-    {
-        s[i] = c;
-    }
-    else if (c == EOF)
-    {
-        s[i] = '\0';
-        puts("");
-        return i;
-    }
-    i++;
-    s[i] = '\0';
+    line[i] = '\0';
     return i;
 }
-void entab (char s_edited[], char s[])
-{
-    int i = 0;
-    int j = 0;
-    int b_count = 0;
-    int t_count = 0;
-    int s_count = 1;
 
-    while (s[j] != '\0')
-    {
-        if (s[j] == ' ')
-        {
-            if (s_count % TAB)
-            {
-                b_count++;
-                j++;
-            }
-            else
-            {
-                t_count++;
-                j++;
-                b_count = 0;
-                printf("t_count is %d\n", t_count);
-            }
-        }
-        else if (s[j] != ' ')
-        {
-            if (t_count)
-            {
-                while (t_count > 0)
-                {
-                    s_edited[i] = 't';
-                    i++;
-                    t_count--;
+/* copy: sepcialized version */
+void copy(void)
+{
+    int i;
+    extern char line[], longest[];
+
+    i = 0;
+    while ((longest[i] = line[i]) != '\0')
+        ++i;
+}
+
+void entab(void)
+{
+    int i, j, counter, temp;
+    /* alexander  petrov > alexander\t petrov
+     *' '' '' ' - \t\t' '*/
+    i = j = counter = 0;
+    while (longest[i] != '\0') {
+        if (i == 0 && longest[i] == ' ' && longest[i + 1] == ' ') {
+            while (longest[i] == ' ') {
+                ++i; ++counter;
+                if ((counter % TABSTOP) == 0) {
+                    entabbed_line[j] = 't'; counter = 0; ++j;
                 }
             }
-            if (b_count)
-            {
-                while (b_count)
-                {
-                    s_edited[i] = 'b';
-                    i++;
-                    b_count--;
+            temp = counter % TABSTOP;
+            while (temp > 0) {
+                entabbed_line[j] = 'b'; j++; --temp;
+            }
+        }
+        entabbed_line[j] = longest[i];
+        if (longest[i] == ' ' && longest[i + 1] == ' ') {
+            while (longest[i] == ' ') {
+                ++i; ++counter;
+                if ((counter % TABSTOP) == 0) {
+                    entabbed_line[j] = 't'; counter = 0; ++j;
                 }
             }
-            if (s[j] == '\t')
-            {
-                s_edited[i] = s[j];
-                s_count = s_count + (TAB - (s_count % TAB)); 
+            if (counter > 0 && (counter % TABSTOP) == 0)
+                --counter;
+            temp = counter % TABSTOP;
+            while (temp > 0) {
+                entabbed_line[j] = 'b';
+                j++; --temp;
             }
-            else
-            {
-                s_edited[i] = s[j];
-            }
-            i++;
-            j++;
-            
+            --j; --i;
         }
-        s_count++;
+        ++i; ++j; ++counter;
     }
-    s_edited[i] = '\0';
+    entabbed_line[j] = '\0';
 }

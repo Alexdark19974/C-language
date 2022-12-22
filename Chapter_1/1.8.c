@@ -1,25 +1,20 @@
 #include <stdio.h>
-int main(void)
+
+/* count lines in input */
+main()
 {
-    int space_count = 0;
-    int tabulation = 0;
-    int EOS = 0;
-    int symbol = 0;
-    while((symbol = getchar()) != EOF)
-    {
-        if(symbol == ' ')
-        {
-            space_count++;
-        }
-        else if(symbol == '\t')
-        {
-            tabulation++;
-        }
-        else if(symbol == '\n')
-        {
-            EOS++;
-        }
+    int c, nl, tb, bl;
+    nl = 0; // assign '0' so as not to deal with uninitialized variables; Try it for yourself.
+    tb = 0;
+    bl = 0;
+    while ((c = getchar()) != EOF) {
+        if (c == ' ')
+            bl++;
+        if (c == '\t')
+            tb++;
+        if (c == '\n')
+            nl++;
+        printf("ASCI char: %d\n", c); 
     }
-    printf("space_count = %d\ntabulation = %d\nEOS = %d\n", space_count, tabulation, EOS);
-    return 0;
+    printf("bls = %d\ntabs = %d\nnls = %d\n", bl, tb, nl);
 }

@@ -1,70 +1,91 @@
 #include <stdio.h>
-#define MAXLINE 1000
-#define LIMIT 0
-int get_line(char[], int);
-void removal(char[], char[]);
+#include <stdio.h>
+#define MAXLINE 1000    /* maximum input line size */
 
-int main(void)
+int get_line(char line[], int maxline);
+void copy (char to[], char from[]);
+int rm_trail_blanks_and_tabs(char buf_from[], char buf_to[]);
+/* print longest input line */
+main()
 {
-    int length = 0;
-    char line[MAXLINE];
-    char edited[MAXLINE];
+    int len;            /* current line length */
+    int max;            /* maximum length seen so far */
+    char line[MAXLINE];     /* current input line */
+    char longest[MAXLINE];  /* longest line saved here */
+    char line_filtered[MAXLINE];
+    int trails;
 
-    while ((length = get_line(line, MAXLINE)) > 0)
-    {
-        if (length > LIMIT)
-        {
-            removal(edited, line);
-            printf("%s\n", edited);
+    max = trails = 0;
+    while ((len = get_line(line, MAXLINE)) > 0)
+        if  (len > 0) {
+            max = len;
+            trails = rm_trail_blanks_and_tabs(line, line_filtered);
+            copy(longest, line_filtered);
+            printf("length: %d, %s", max, line_filtered);
+            printf("trails removed: %d\n", trails);
         }
-    }
+    if (max > 0)    /* there was a line */
+        printf("length: %d, %s", max, line_filtered);
     return 0;
 }
 
-int get_line(char charline[], int maxline) 
+/* getline:  read a line into s, return length */
+int get_line(char s[], int lim)
 {
-    int i = 0, c = 0;
+    int c, i;
 
-    for (i = 0; i < maxline - 2 && (c = getchar()) != EOF && c!= '\n';)
-    {
-        charline[i] = c;
-        i++;
+    for (i=0; (c=getchar()) != EOF && c != '\n'; ++i)
+        if (i<lim-1) // even though the limit is MAXLINE - 1 we keep counting until EOF or newline char is met
+            s[i] = c;
+        else if (i == lim-1)
+            s[i] = '\0';
+
+    if (c == '\n') {
+        s[i] = c;
+        ++i;
     }
-    if (c == '\n')
-    {
-        charline[i] = c;
-        i++;
-        charline[i] = '\0';
-    }
-    if(c == EOF)
-    {
-        charline[i] = '\0';
-        puts("");
-    }
+    if (i < lim-1)
+        s[i] = '\0';
     return i;
 }
 
-void removal(char to[], char from[])
+/* copy:  copy 'from' into 'to'; assume to is big enough */
+void copy(char to[], char from[])
 {
-    int i = 0;
-    while (from[i] != '\n' && from[i] != '\0')
-    { 
-        if (from[i] == '\t')
-        {
-            from[i] = ' ';
-            to[i] = from[i];
-            i++;
+    int i;
+
+    i = 0;
+    while ((to[i] = from[i]) != '\0')
+        i++;
+}
+
+int rm_trail_blanks_and_tabs(char buf_from[], char buf_to[])
+{
+    int i, j, removed;
+
+    for (i = 0, j = 0, removed = 0; buf_from[i] != '\0'; ++i) {
+        if ((i == 0 && buf_from[0] == ' ') || (i == 0 && buf_from[0] == '\t'))  {
+            ++i; 
+            ++removed;
+            while(buf_from[i] == ' ' || buf_from[i] == '\t') {
+                ++i;
+                ++removed;
+            }
         }
-        else if (from[i] == ' ' && from[i++] == ' ')
-        {
-            to[i] = from[i];
-            i++;
-            continue;
+        buf_to[j] = buf_from[i];
+        ++j;
+        
+        if ((buf_from[i] == ' ' && buf_from[i + 1] == ' ') || (buf_from[i] == '\t' && buf_from[i + 1] == '\t')) {
+            ++i;
+            while(buf_from[i] == ' ' || buf_from[i] == '\t')  {
+                ++i;
+                ++removed;
+            }
+            --i;
         }
-            
-            to[i] = from[i];
+        if ((buf_from[i + 1] == ' ' && buf_from[i + 2] == '\0') || (buf_from[i + 1] == '\t' && buf_from[i + 2] == '\0'))
             i++;
     }
-    to[i] = '\n';
-    to[i++] = '\0';
+    buf_to[j] = '\0';
+    return removed;
 }

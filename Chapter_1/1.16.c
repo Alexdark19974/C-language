@@ -1,10 +1,9 @@
 #include <stdio.h>
-#include <stdio.h>
 #define MAXLINE 1000    /* maximum input line size */
 
 int get_line(char line[], int maxline);
 void copy (char to[], char from[]);
-void reverse(char buf[]);
+
 /* print longest input line */
 main()
 {
@@ -15,13 +14,12 @@ main()
 
     max = 0;
     while ((len = get_line(line, MAXLINE)) > 0)
-        if  (len > 0) {
+        if  (len > max) {
             max = len;
-            printf("origin line: %s", line);
-            reverse(line);
-            printf("reversed line %s", line);
+            copy(longest, line);
         }
-
+    if (max > 0)    /* there was a line */
+        printf("length: %d, %s", max, longest);
     return 0;
 }
 
@@ -30,28 +28,27 @@ int get_line(char s[], int lim)
 {
     int c, i;
 
-    for (i=0; i<lim-1 && (c=getchar()) != EOF && c != '\n'; ++i)
-        s[i] = c;
+    for (i=0; (c=getchar()) != EOF && c != '\n'; ++i)
+        if (i<lim-1) // even though the limit is MAXLINE - 1 we keep counting until EOF or newline char is met
+            s[i] = c;
+        else if (i == lim-1)
+            s[i] = '\0';
 
     if (c == '\n') {
         s[i] = c;
         ++i;
     }
-    s[i] = '\0';
+    if (i < lim-1)
+        s[i] = '\0';
     return i;
 }
 
-void reverse(char buf[])
+/* copy:  copy 'from' into 'to'; assume to is big enough */
+void copy(char to[], char from[])
 {
-    int i, j, len, tmp;
-    
-    for (i = 0, len = 0; buf[i] != '\0'; ++i)
-        ++len;
-    if (buf[len - 1] == '\n')
-        --len;
-    for (i = 0, j = len - 1; i < (len / 2); ++i, --j) {
-        tmp = buf[i];
-        buf[i] = buf[j];
-        buf[j] = tmp;
-    }
+    int i;
+
+    i = 0;
+    while ((to[i] = from[i]) != '\0')
+        i++;
 }

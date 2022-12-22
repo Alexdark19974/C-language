@@ -1,86 +1,68 @@
 #include <stdio.h>
-#define MAXSIZE 10
 
-void HORIZONTAL (int array[])
+/* count digits, white space, others */
+main()
 {
-    printf("\nHORIZONTAL\n");
-    
-    for (int i = 0; i < MAXSIZE; i++)
-    {
-        printf("%2d:", i);
-
-        for (int j = 0; j < array[i]; j++)
-        {
-            printf(" # ");
-        }
-        printf("\n");
-    }
-}
-
-void VERTICAL (int array[], int max_length)
-{
-    printf("\nVERTICAL\n");
-    for (int i = 0; i < max_length; i++)
-    {
-        for (int j = 0; j < MAXSIZE; j++)
-        {
-            if (array[j] >= max_length - i)
-            {
-                printf("# ");
+    int c, i, j, tmp, nwhite, nother, nchar;
+    int ndigit[10];
+    int nwordlen[100];
+    nwhite = nother = nchar = 0;
+    for (i = 0; i < 10; ++i)
+        ndigit[i] = 0;
+    for (i = 0; i < 100; ++i)
+        nwordlen[i] = 0;
+    i = 0;
+    while ((c = getchar()) != EOF)
+        if (c >= '0' && c <= '9')
+            ++ndigit[c-'0'];
+        else if (c == ' ' || c == '\n' || c == '\t') {
+            if (nchar) {
+                nwordlen[i] = nchar;
+                ++i;
+                if (i == 99) {
+                    printf("warning: the end of an array has been reached.\nAt this point, it will rewrite itself starting at index 0.\n");
+                    i = 0;
+                }
             }
-            else
-            {
-                printf("  ");
-            }
+            ++nwhite;
+            nchar = 0;
         }
-        printf("\n");
-    }
-
-    for (int i = 0; i < MAXSIZE; i++)
-    {
-        printf("%d ", i);
-    }
-}
-int main(void)
-{
-    int c;
-    int array[MAXSIZE] = {0};
-    int counter_s = 0;
-    int max_length = 0;
-    int i = 0;
-
-    while ((c = getchar()) != EOF && i < 10)
-    {
-        if (c != ' ' && c != '\n' && c != '\t')
-        {
-            counter_s++;  
-            i++;      
+        else {
+            ++nother;
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                ++nchar;
         }
-        else
-        {
-            array[i] = counter_s;
+   printf("digits = ");
+   for (i = 0; i < 10; ++i)
+       printf(" %d", ndigit[i]);
+   printf(", white space = %d, other = %d\n",
+       nwhite, nother);
 
-            if (array[i] > max_length)
-            {
-                max_length = array[i];
-            }
-            i = 0;
-            counter_s = 0;
-        }
-    }
+   printf("----Horizontal histogram-----\n"); 
+   for (i = 0; nwordlen[i] != 0; ++i) {
+       printf("word%d: ", i + 1);
+       for (c = nwordlen[i]; c > 0; --c)
+           printf("#");
+       putchar('\n');
+   }
 
-    if (counter_s && i < 10)
-    {
-        if (max_length < counter_s)
-        {
-            max_length = counter_s;
-        }
+   printf("----Vertical histogram----\n");
+   for (nother = 0; nwordlen[nother] != 0; ++nother)
+       printf("word%d ", nother);
+   putchar('\n');
 
-        array[i] = counter_s;
-    }
-
-    HORIZONTAL(array);
-    VERTICAL(array, max_length);
-    
-    return 0;
+   tmp = nother;
+   for (i = 0; tmp > 0; i++) {
+       tmp = nother;
+       for (j = 0; tmp != 0 && nwordlen[j] != 0; j++) {
+           if (nwordlen[j] > i)
+               printf("   # ");
+           else {
+               printf("     ");
+               --tmp;
+           }
+       }
+       putchar('\n');
+   }
+   putchar('\n');
 }

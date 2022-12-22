@@ -1,63 +1,55 @@
 #include <stdio.h>
-#define MAXLINE 1000
+#define MAXLINE 1000    /* maximum input line size */
 
-int get_line (char charline[], int maxline) 
-{
-    int c;
-    int i = 0; // over symbol count
-    int j = 0;
-    for (j = 0; (c = getchar()) != EOF && c!= '\n';)
-    {
-        if (j < maxline - 2)
-        {
-            charline[i] = c;
-            j++;
-            i++;
-        }
-        else
-        {
-            i++;
-        }
-    }
-    if (c == '\n')
-    {
-        charline[j] = c;
-        j++;
-        i++;
-    }
-    charline[j] = '\0';
+int get_line(char line[], int maxline);
+void copy (char to[], char from[]);
 
-    return i;
-}
-void copy(char to[], char from[])
+/* print longest input line */
+main()
 {
-    int i = 0;
-    while (from[i] != '\0')
-    {
-         to[i] = from[i];
-         i++;
-    }
-    to[i] = '\0';
-}
-int main(void)
-{
-    int length; // current line length
-    char line[MAXLINE]; // current line input
-    char over_80[MAXLINE]; // line over 80
+    int len;            /* current line length */
+    int max;            /* maximum length seen so far */
+    char line[MAXLINE];     /* current input line */
+    char longest[MAXLINE];  /* longest line saved here */
 
-    while ((length = get_line(line, MAXLINE)) > 0)
-    {
-        if (length > 80)
-        {
-            copy(over_80, line);
+    max = 0;
+    while ((len = get_line(line, MAXLINE)) > 0)
+        if  (len > 80) {
+            max = len;
+            copy(longest, line);
+            printf("length: %d, %s", max, longest);
         }
-        else 
-        {
-            continue;
-        }
-    }
-     printf("\n%s\n",over_80);
+    if (max > 80)    /* there was a line */
+        printf("length: %d, %s", max, longest);
     return 0;
 }
 
+/* getline:  read a line into s, return length */
+int get_line(char s[], int lim)
+{
+    int c, i;
 
+    for (i=0; (c=getchar()) != EOF && c != '\n'; ++i)
+        if (i<lim-1) // even though the limit is MAXLINE - 1 we keep counting until EOF or newline char is met
+            s[i] = c;
+        else if (i == lim-1)
+            s[i] = '\0';
+
+    if (c == '\n') {
+        s[i] = c;
+        ++i;
+    }
+    if (i < lim-1)
+        s[i] = '\0';
+    return i;
+}
+
+/* copy:  copy 'from' into 'to'; assume to is big enough */
+void copy(char to[], char from[])
+{
+    int i;
+
+    i = 0;
+    while ((to[i] = from[i]) != '\0')
+        i++;
+}

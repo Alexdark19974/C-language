@@ -1,22 +1,20 @@
 #include <stdio.h>
-int main (void)
+
+main (void)
 {
     int c;
-    int flag = 0;
+    int blc;
 
-    while((c = getchar()) != EOF)
-    {
-        if (c != ' ')
-        {
-            putchar(c);
-            flag = 0;
+    blc = 0;
+    while ((c = getchar()) != EOF) {
+        if (c == ' ') {
+            if (!blc)
+                printf("\' \'"); // ' ' represents one blank
+            blc++;
         }
-        else if (flag == 0)
-        {
+        if (c != ' ') {
+            blc = 0;
             putchar(c);
-            flag = 1;
         }
-
     }
-    return 0;
 }

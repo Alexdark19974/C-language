@@ -1,138 +1,85 @@
- 
+
 #include <stdio.h>
-#define MAXS 1000
-#define F_TRIGGER 6
-#define TAB 8
 
-int
-get_line(char[], int);
-void fold (char[], char[]);
-
-int main (void)
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
+#define FOLDPOINT 16
+int max;            /* maximum length seen so far */
+char line[MAXLINE];     /* current input line */
+char longest[MAXLINE];  /* longest line saved here */
+char folded_line[MAXLINE];
+int get_line(void);
+void copy(void);
+void fold_line(void);
+/* print longest input line */
+main()
 {
-    char string[MAXS];
-    char f_string[MAXS];
-    int length = 0;
+    int len;
+    extern int max;
+    extern char longest[];
 
-    while ((length = get_line(string, MAXS)) > 0)
-    {
-        fold(f_string, string);
-        printf("%s", f_string);
-    }
+    max = 0;
+    while ((len = get_line()) > 0)
+        if (len > 0) {
+            max = len;
+            copy();
+            fold_line();
+            printf("folded line: %s\n", folded_line);
+        }
     return 0;
 }
 
-int get_line(char string[], int maxs)
+/* getline: read a line into s, return length */
+int get_line(void)
 {
-    int i = 0;
-    int c;
-    int tab_count = 0;
+    int c, i;
+    extern char line[];
 
-    while (i < maxs - 2 && (c = getchar()) != EOF && c != '\n')
-    {
-        if (c == '\t')
-        {
-            int res = TAB - (tab_count % TAB);
-
-            while (res > 0)
-            {
-                string[i] = ' ';
-                i++;
-                res--;
-            }
-            tab_count = 0;
-        }
-        else
-        {
-            string[i] = c;
-            i++;
-            tab_count++;
-        }
+    for (i=0; i<MAXLINE-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
-    if (c == '\n')
-    {
-        string[i] = c;
-    }
-    i++;
-    string[i] = '\0';
-
-    return i;    
+    line[i] = '\0';
+    return i;
 }
 
-void fold(char to[], char from[])
+/* copy: sepcialized version */
+void copy(void)
 {
-    int i = 0;
-    int j = 0;
-    int pos = 0;
-    int b_pos = 0;
+    int i;
+    extern char line[], longest[];
 
-    while (from[i] != '\0')
-    {
-        if (pos >= F_TRIGGER)
-        {
-            if (from[i] != ' ')
-            {
-                if (b_pos == 0)
-                {
-                    b_pos = F_TRIGGER;
+    i = 0;
+    while ((longest[i] = line[i]) != '\0')
+        ++i;
+}
 
-                    while (j < b_pos)
-                    {
-                        to[j] = from[j];
-                        j++;
-                    }
-                    to[j] = '\n';
-                    j++;
-                    to[j] = from[b_pos];
-                    j = b_pos + 1;
-                    i = b_pos;
-                    pos = 0;
-                    b_pos = 0;
-                }
-                else
-                {
-                    while (j < b_pos)
-                    {
-                        to[j] = from[j];
-                        j++;
-                    }
-                    to[b_pos] = '\n';
-                    pos = 0;
-                    i = b_pos + 1;
-                    j = b_pos + 1;
+void fold_line(void)
+{
+    int i, j, counter;
+
+    i = j = counter = 0;
+
+    while (longest[i] != '\0') {
+        folded_line[j] = longest[i];
+        ++counter;
+        if (!(counter % FOLDPOINT)) {
+            if (longest[i] != '\t' || longest[i] != ' ') {
+                while ((longest[i] != '\0' && longest[i] != '\t') && (longest[i] != '\0' && longest[i] != ' ')) {
+                    folded_line[j] = longest[i];
+                    ++i; ++j;
                 }
             }
-            else
-            {
-                b_pos = i;
-                
-                while (j < b_pos)
-                {
-                    to[j] = from[j];
-                    j++;
-                }
-                to[b_pos] = '\n';
-                pos = 0;
-                i = b_pos + 1;
-                j = b_pos + 1;
-            }
+            folded_line[j] = '\n'; // FOLDPOINT
+            counter = 0;
+            ++j;
+            folded_line[j] = longest[i];
         }
-        if (from[i] == ' ')
-        {
-            b_pos = i;
-        }
-        else if (from[i] == '\n')
-        {
-          while (j <= i)
-                {
-                    to[j] = from[j - 1];
-                    j++;
-                }    
-        }
-        i++;
-        pos++;
+        if (longest[i] != '\0') {
+           ++i; ++j;
+       }
     }
-    to[j] = '\n';
-    j++;
-    to[j] = '\0';
+    folded_line[j] = '\0';
 }
