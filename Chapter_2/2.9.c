@@ -1,53 +1,67 @@
-#include  <stdio.h>
-int bitcount (unsigned int);
-/*
-In a two's complement number system, x &= (x-1) deletes the rightmost 1-bit in x . Explain why. Use this observation to write a faster version of bitcount .
-*/
-// x = x & (x - 1) > x &= (x - 1);
-/*int main (void)
+#include <stdio.h>
+#include <limits.h>
+#define MAXLINE 1000
+#define BIT_MAX 32
+#define MASK UINT_MAX
+int get_line(char line[], int lim);
+int bitcount(unsigned int x);
+int atoi(char s[]);
+
+main()
 {
-    char x = 7;  //00000111
-    x &= (x - 1); //00000111 & (7  - 1) > 00000111 & 00000110 > 00000110 > 6
+    int len;
+    unsigned int x, n;
+    char line[MAXLINE];
 
-    printf("%d\n", x);
+    x = n = 0;
 
-    return 0;
-}*/
+    for (n = 0; n != MAXLINE; ++n)
+        line[n] = 0;
 
-int main (void)
-{
-    int number = 128; //10000000
-    printf("%d\n", bitcount(number));
-    return 0;
-}
-int bitcount (unsigned int x)
-{
-    int b;
-    for (b = 0; x != 0; x &= (x - 1))
-    { 
-        b++;
-    }
-
-    return b;
-}
-// 7 
-//00000111 & 00000110 > 00000110 > 6
-//00000110 & 00000101 > 00000100 > 4
-//00000100 & 00000011 > 00000000 > 0
-
-//128
-//10000000 & 01111111 > 0 
-
-/*int bitcount (unsigned int x)
-{
-    int b;
-    for (b = 0; x != 0; x >> 1)
-    {
-        if (x & 01) 
-        {
-            b++;
+    printf("Enter the number: ");
+    while ((len = get_line(line, MAXLINE)) > 0) {
+        if (len > 0) {
+            x = atoi(line);
+            x = bitcount(x);
+            printf("the number of 1 bits: %u\n", x);
         }
     }
 
+    return 0;
+}
+
+int get_line(char line[], int lim)
+{
+    int i, c;
+
+    c = 0;
+    for (i=0;i<lim-1 && (c = getchar())!=EOF && c!='\n'; ++i)
+        line[i] = c;
+
+    if (c == '\n')
+        line[i++] = c;
+
+    line[i] = '\0';
+    return i;
+}
+
+int atoi(char s[])
+{
+    int i, n;
+
+    n = 0;
+    for (i = 0; s[i] >= '0' && s[i] <= '9'; ++i)
+        n = 10 * n + (s[i] - '0');
+    return n;
+}
+
+/* bitcount: count 1 bits in x */
+int bitcount(unsigned int x)
+{
+    int b;
+
+    for (b = 0; x != 0; x &= (x - 1))
+            b++;
     return b;
-}*/
+}
+

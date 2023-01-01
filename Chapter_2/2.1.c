@@ -1,157 +1,105 @@
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
-#define BIT 8
-void power_for_char(int, int);
-void power_for_int(int, int);
-void power_for_short(int, int);
-void power_for_long (int, int);
-void power_for_long_long(int, int);
-int main(void)
+#define UCHAR_MIN   0
+#define USHRT_MIN   0
+#define UINT_MIN    0
+#define ULONG_MIN   0
+
+void print_char_range(void);
+void print_short_range(void);
+void print_int_range(void);
+void print_long_range(void);
+void compute_ranges(void);
+
+main()
 {
-    int c;
-    power_for_char(2, BIT);
-    power_for_int(2, BIT * sizeof(int));
-    power_for_short(2, BIT * sizeof(short));
-    power_for_long(2, BIT * sizeof(long));
-    power_for_long_long(2, BIT * sizeof(long long));
-    while ((c = getchar()) != EOF)
-    {
-        if (c == 'c')
-        {
-           printf("         char type\n");
-           printf("signed from: %d to: %d\n", SCHAR_MIN, SCHAR_MAX);
-           printf("unsigned from: %d to: %u\n", 0, UCHAR_MAX);
-        }
-        else if (c == 'i')
-        {
-            printf ("       int type\n");
-            printf("singed from: %d to: %d\n", INT_MIN, INT_MAX);
-            printf("unsigned from: %d to: %u\n", 0, UINT_MAX);
-        }
-        else if (c == 's')
-        {
-            printf ("       short type\n");
-            printf("singed from: %d to: %d\n", SHRT_MIN, SHRT_MAX);
-            printf("unsigned from: %d to: %u\n", 0, USHRT_MAX);
-        }
-        else if (c == 'l')
-        {
-            printf ("       long type\n");
-            printf("singed from: %ld to: %ld\n", LONG_MIN, LONG_MAX);
-            printf("unsigned from: %d to: %lu\n", 0, ULONG_MAX);   
-        }
-        else if (c == 'L')
-        {
-            printf ("       long long type\n");
-            printf("singed from: %lld to: %lld\n", LLONG_MIN, LLONG_MAX);
-            printf("unsigned from: %d to: %llu\n", 0, ULLONG_MAX);
-        }
-        else if (c == 'f')
-        {
-            printf ("       float type\n");
-            printf("from: %e to: %e\n", FLT_MIN, FLT_MAX);      
-        }
-        else if (c == 'd')
-        {
-            printf ("       double type\n");
-            printf("from: %e to: %e\n", DBL_MIN, DBL_MAX); 
-        }
-        else if (c == 'D')
-        {
-            printf ("       long double type\n");
-            printf("from: %Le to: %Le\n", LDBL_MIN, LDBL_MAX);
-        }
-        else if (c == '\n')
-        {
-            continue;
-        }
-        else
-        {
-            printf ("wrong letter\n");
-        }
+    printf("Do you want to print ranges from standard libraries or by computing? 1\\0: ");
+    if (getchar() == '1') {
+        print_char_range();
+        print_short_range();
+        print_int_range();
+        print_long_range();
     }
+    else
+        compute_ranges();
+
     return 0;
 }
-void power_for_char (int number, int power)
+
+void print_char_range(void) 
 {
-    int char_u = 1;
-    int char_s = 1;
-    for (int i = 0; i < power; i++)
-    {
-        char_u = char_u * number;
-    }
-    for (int i = 0; i < power - 1; i++)
-    {
-        char_s = char_s * number;
-    }
-    printf ("       char type\n");
-    printf("from: 0 to: %d\n", char_u - 1);
-    printf("from: %d to: %d\n", char_s * -1, char_s - 1);
+    printf("signed char min: %d - signed char max: %d\nunsigned char min: %u - unsigned char max: %u\n --------------------------------------------\n", SCHAR_MIN, SCHAR_MAX, UCHAR_MIN, UCHAR_MAX);
 }
 
-void power_for_int ( int number, int power)
+void print_short_range(void) 
 {
-    int res = 1;
-    int res_s = 1;
-    for (int i = 0; i < power; i++)
-    {
-        res = (res * number);
-    }
-    for (int i = 0; i < power - 1; i++)
-    {
-        res_s = res_s * number;
-    }
-    printf ("       int type\n");
-    printf("from: 0 to: %u\n", res - 1);
-    printf("from: %d to: %d\n", res_s, res_s - 1);
+    printf("signed short min: %hd - signed short max: %hd\nunsigned short min: %hu - unsigned short max: %hu\n --------------------------------------------\n", SHRT_MIN, SHRT_MAX, USHRT_MIN, USHRT_MAX);
 }
 
-void power_for_short(int number, int power)
+void print_int_range(void) 
 {
-    int short_u = 1;
-    int short_s = 1;
-    for (int i = 0; i < power; i++)
-    {
-        short_u = short_u * number;
-    }
-    for (int i = 0; i < power - 1; i++)
-    {
-        short_s = short_s * number;
-    }
-    printf ("       short type\n");
-    printf("from: 0 to: %d\n", short_u - 1);
-    printf("from: %d to: %d\n", short_s * -1, short_s - 1);
+    printf("signed int min: %d - signed int max: %d\nunsigned int min: %u - unsigned int max: %u\n --------------------------------------------\n", INT_MIN, INT_MAX, UINT_MIN, UINT_MAX);
 }
-void power_for_long (int number, int power)
+
+void print_long_range(void) 
 {
-    long long_u = 1;
-    long long_s = 1;
-    for (int i = 0; i < power; i++)
-    {
-        long_u = long_u * number;
-    }
-    for (int i = 0; i < power - 1; i++)
-    {
-        long_s = long_s * number;
-    }
-    printf ("       long type\n");
-    printf("from: 0 to: %lu\n", long_u - 1);
-    printf("from: %ld to: %ld\n", long_s * -1, long_s - 1);
+    printf("signed long min: %ld - signed long max: %ld\nunsigned long min: %lu - unsigned long max: %lu\n --------------------------------------------\n", LONG_MIN, LONG_MAX, ULONG_MIN, ULONG_MAX);
 }
-void power_for_long_long(int number, int power)
+
+void compute_ranges(void)
 {
-    long long long_long_u = 1;
-    long long long_long_s = 1;
-    for (int i = 0; i < power; i++)
-    {
-        long_long_u = long_long_u * number;
+    /*it is going to take a very very long time since values are incremented by 1 but the job will eventually be done */
+    char c;
+    unsigned char uc;
+    short s;
+    unsigned short us;
+    int i;
+    unsigned ui;
+    long l;
+    unsigned long ul;
+
+    c = uc = s = us = i = ui = l = ul = 0;
+
+    while (ul != ULONG_MAX) {
+        if (uc != UCHAR_MAX)
+            ++uc;
+        if (c != CHAR_MAX)
+            ++c;
+        if (us != USHRT_MAX)
+            ++us;
+        if (s != SHRT_MAX)
+            ++s;
+        if (ui != UINT_MAX)
+            ++ui;
+        if (i != INT_MAX)
+            ++i;
+        if (l != LONG_MAX)
+            ++l;
+        ++ul;
     }
-    for (int i = 0; i < power - 1; i++)
-    {
-        long_long_s = long_long_s * number;
+
+    printf("---------- UNSIGNED CHAR ----------\nnunsigned char min: %u - unsigned char max: %u\n --------------------------------------------\n", UCHAR_MIN, uc);
+    printf("---------- UNSIGNED SHORT ----------\nnunsigned short min: %hu - unsigned short max: %hu\n --------------------------------------------\n", USHRT_MIN, us);
+    printf("---------- UNSIGNED INT ----------\nnunsigned int min: %u - unsigned int max: %u\n --------------------------------------------\n", UINT_MIN, ui);
+    printf("---------- UNSIGNED LONG ----------\nnunsigned long min: %lu - unsigned long max: %lu\n --------------------------------------------\n", ULONG_MIN, ul);
+    printf("---------- SIGNED CHAR ----------\nsigned char max: %d\n --------------------------------------------\n", c);
+    printf("---------- SIGNED SHORT ----------\nsigned short max: %hd\n --------------------------------------------\n", s);
+    printf("---------- SIGNED INT ----------\nsigned int max: %d\n --------------------------------------------\n", i);
+    printf("---------- SIGNED LONG ----------\nsigned long max: %ld\n --------------------------------------------\n", l);
+
+    while (l != LONG_MIN) {
+        if (c != CHAR_MIN)
+            --c;
+        if (s != SHRT_MIN)
+            --s;
+        if (i != INT_MIN)
+            --i;
+        --l;
     }
-    printf ("       long long type\n");
-    printf("from: 0 to: %llu\n", long_long_u - 1);
-    printf("from: %lld to: %lld\n", long_long_s * -1, long_long_s - 1);   
+    printf("----------SIGNED CHAR -----------\nsigned char min: %d\n", c);
+    printf("----------SIGNED SHORT -----------\nsigned short min: %hd\n", s);
+    printf("----------SIGNED INT -----------\nsigned int min: %d\n", i);
+    printf("----------SIGNED LONG -----------\nsigned long min: %ld\n", l);
 }
+

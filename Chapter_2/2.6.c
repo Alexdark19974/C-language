@@ -1,9 +1,4 @@
 #include <stdio.h>
-
-//Exercise 2-6. Write a function setbits(x,p,n,y) that returns x with the n bits that begin at position p set to the rightmost n bits of y, leaving the other bits unchanged.
-
-
-
 unsigned int setbits(unsigned int, int, int, unsigned int);
 
 int main (void)
@@ -12,7 +7,7 @@ int main (void)
     int op_number = 13; // 00001|101| 
     int bitmap = 3;
     int position = 4;
-    
+
     int got_bits = setbits(number, position, bitmap, op_number);
 
     printf("%d\n", got_bits);
@@ -44,3 +39,4 @@ unsigned int setbits(unsigned int x, int p, int n, unsigned int y)
     00010100 | 01000010 = 01010110
     */
 }
+

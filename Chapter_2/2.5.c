@@ -2,9 +2,6 @@
 #include <string.h>
 #include <ctype.h>
 #define MAX 1000
-
-//K&R 2.5 asks: Write the function any(s1,s2), which returns the first location in the string s1 where any character from the string s2 occurs, or -1 if s1 contains no characters from s2. (The standard library function strpbrk does the same job but returns a pointer to the location.)
-
 void get_line(char[], int);
 int any(char[], char[], int[]);
 
@@ -59,7 +56,6 @@ int any(char s[], char s1[], int s3[])
     {
         return l;
     }
-    
 }
 
 void get_line (char s[], int max)
@@ -78,6 +74,7 @@ void get_line (char s[], int max)
             s[i] = '\0';
             ++i;
         }
-        
+
         s[i] = '\0';
 }
+

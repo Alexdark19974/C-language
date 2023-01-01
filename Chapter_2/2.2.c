@@ -1,37 +1,44 @@
 #include <stdio.h>
-#include <string.h>
 #define MAXLINE 1000
 
-void get_line (char[], int);
+int get_line(char line[], int maxline);
 
-int main (void)
+main ()
 {
-    char s[MAXLINE];
-    get_line(s, MAXLINE);
+    int len;
+    int max;
+    char line[MAXLINE];
+    char longest[MAXLINE];
+
+    max = 0;
+    while ((len = get_line(line, MAXLINE)) > 0)
+        if (len > 0) {
+            max = len;
+            printf("line: %s\n", line);
+        }
 
     return 0;
 }
 
-void get_line (char s[], int m)
+int get_line(char line[], int lim)
 {
-    int i = 0; 
-    int c;
-    int length;
-    for (i = 0; i < m - 1; i++)
-    {
-        if ((c = getchar()) != '\n')
-        {
-            if (c != EOF)
-            {
-                s[i] = c;
-            }
+    int c, i;
 
+    for (i=0;(c = getchar())!=EOF; ++i) {
+        if (i<lim-1) {
+            line[i] = c;
+            if (c == '\n') {
+                ++i;
+                line[i] = '\0';
+                return i;
             }
-            else
-            {
-                s[i] = '\0';
-                printf ("%d %d is the length of the string\n", i, length = strlen(s));
-                return;
-            }
+        }
+        else {
+            line[i] = '\0';
+            return i;
+        }
     }
+    line[i] = '\0';
+    return i;
 }
+

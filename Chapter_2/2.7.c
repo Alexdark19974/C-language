@@ -1,26 +1,76 @@
 #include <stdio.h>
-unsigned int invert (unsigned int, unsigned int, unsigned int);
-/*Write a function invert(x,p,n) that returns x with the n bits that begin at position p inverted (i.e., 1 changed into 0 and vice versa), leaving the others unchanged.*/
+#include <limits.h>
+#define MAXLINE 1000
+#define BIT_MAX 31
+#define MASK UINT_MAX
+int get_line(char line[], int lim);
+unsigned int invert(unsigned int x, unsigned p, unsigned n);
+int atoi(char s[]);
 
-int main(void)
+main()
 {
-    int number = 84; //0|0101|101 > 0|1010|101  > 85
-    int position = 6;
-    int bit_net = 4;
-    printf("%d\n", invert(number, position, bit_net));
+    int len, num;
+    unsigned int x, p, n;
+    char line[MAXLINE], ready_to_invert;
+
+    ready_to_invert = x = p = n = 0;
+
+    for (num = 0; num != MAXLINE; ++num)
+        line[num] = 0;
+    printf("Enter the number: ");
+    while ((len = get_line(line, MAXLINE)) > 0) {
+        if (len > 0 && !ready_to_invert)
+            x = atoi(line);
+        else if (len > 0 && ready_to_invert == 1 && p <= BIT_MAX)
+            p = atoi(line);
+        else if (len > 0 && ready_to_invert == 2 && p >= n) {
+            n = atoi(line);
+            x = invert(x, p, n);
+            printf("Inverted number=%u at the position=%u with bits=%u\n", x, p, n);
+            ready_to_invert = -1;
+        }
+        else {
+            printf("error: illegal character or the lack thereof.\n");
+            ready_to_invert = -1;
+        }
+        if (-1 == ready_to_invert)
+            printf("Enter the number: ");
+        ready_to_invert++;
+        if (ready_to_invert == 1)
+            printf("Enter the starting position of n-bit range: ");
+        if (ready_to_invert == 2)
+            printf("Enter the number of bits: ");
+    }
+
     return 0;
 }
 
-unsigned int invert ( unsigned int x, unsigned int p, unsigned int n)
+int get_line(char line[], int lim)
 {
-    int tmp1 = ~(~0 << n); // 00000000 > 11111111 > 11110000 > 00001111
-    tmp1 = (x >> (p + 1 - n)) & tmp1; // 00101101 > 0000|0101 & 00001111 > 0101
-    tmp1 = ~tmp1; //00000101 > 1111|1010
-    tmp1 = ((~0 << n) ^ tmp1) << (p + 1 - n); //11110000  ^ 1111|1010| > 00001010 > 0|1010|000
-    int tmp = ~(~0 << n); //00000000 > 11111111 > 11110000 > 00001111
-    tmp = tmp << (p + 1 - n); //01111000
-    tmp = ~tmp; //10000111
-    tmp = x & tmp; // 00101101 & 10000111 > 00000101;
-    return tmp1 | tmp; // 01010000 | 00000101 > 01010101
-}   
+    int c, i;
 
+    c = 0;
+    for (i=0;i<lim-1 && (c = getchar())!=EOF && c!='\n'; ++i)
+        line[i] = c;
+
+    if (c == '\n')
+        line[i++] = c;
+
+    line[i] = '\0';
+    return i;
+}
+
+int atoi(char s[])
+{
+    int i, n;
+
+    n = 0;
+    for (i = 0; s[i] >= '0' && s[i] <= '9'; ++i)
+        n = 10 * n + (s[i] - '0');
+    return n;
+}
+
+unsigned int invert(unsigned int x, unsigned int p, unsigned int n)
+{
+    return x ^ ((~(MASK << n)) << (p - n));
+}

@@ -51,8 +51,9 @@ void get_line (char s[], int max)
             s[i] = '\0';
             ++i;
         }
-        
+
         s[i] = '\0';
 
     return;
 }
+
