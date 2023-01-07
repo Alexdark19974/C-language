@@ -4,8 +4,6 @@
 #define STEP    20
 /* create chart of farenheits to celcius and backwards*/
 
-#include <stdio.h>
-
 int fahr_to_celc(int, int, int);
 /* print Fahrenheit-Celsius table 
     for fahr = 0, 20, ..., 300; floating-point version */
@@ -27,3 +25,4 @@ int fahr_to_celc(int lower, int upper, int step)
     }
     return 0;
 }
+

@@ -51,14 +51,14 @@ main()
    for (i = 0; i < 10; ++i)
        printf(" %d", i);
    putchar('\n');
-   printf("----Horizontal histogram-----\n"); 
+   printf("----Horizontal histogram-----\n");
    for (i = 0; nwordlen[i] != 0; ++i) {
        printf("word%d: ", i + 1);
        for (c = nwordlen[i]; c > 0; --c)
            printf("#");
        putchar('\n');
    }
-   
+
    i = nexclam;
    printf("!:");
    while (i) {
@@ -131,7 +131,7 @@ main()
 
        for (j = 0; tmp != 0 && nwordlen[j] != 0; j++) {
            if (nwordlen[j] > i)
-               printf("  #   "); 
+               printf("  #   ");
            else {
                printf("      ");
                --tmp;
@@ -170,3 +170,4 @@ main()
    }
    putchar('\n');
 }
+

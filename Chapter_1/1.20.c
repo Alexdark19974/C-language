@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #define MAXLINE 1000    /* maximum input line size */
 #define TABSTOP 8
 int max;            /* maximum length seen so far */
@@ -75,3 +74,4 @@ void detab(void)
     }
     detabed_line[j] = '\0';
 }
+

@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #define MAXLINE 1000    /* maximum input line size */
 #define TABSTOP 8
 #define FOLDPOINT 16
@@ -82,3 +81,4 @@ void rm_comment(void)
     }
     no_comment_line[j] = '\0';
 }
+

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdio.h>
 #define MAXLINE 1000    /* maximum input line size */
-
 int get_line(char line[], int maxline);
 void copy (char to[], char from[]);
 int rm_trail_blanks_and_tabs(char buf_from[], char buf_to[]);
@@ -64,7 +63,7 @@ int rm_trail_blanks_and_tabs(char buf_from[], char buf_to[])
     int i, j, removed;
 
     for (i = 0, j = 0, removed = 0; buf_from[i] != '\0'; ++i) {
-        if ((i == 0 && buf_from[0] == ' ') || (i == 0 && buf_from[0] == '\t'))  {
+        if ((i == 0 && buf_from[0] == ' ') || (i == 0 && buf_from[0] == '\t')) {
             ++i; 
             ++removed;
             while(buf_from[i] == ' ' || buf_from[i] == '\t') {
@@ -74,10 +73,10 @@ int rm_trail_blanks_and_tabs(char buf_from[], char buf_to[])
         }
         buf_to[j] = buf_from[i];
         ++j;
-        
+
         if ((buf_from[i] == ' ' && buf_from[i + 1] == ' ') || (buf_from[i] == '\t' && buf_from[i + 1] == '\t')) {
             ++i;
-            while(buf_from[i] == ' ' || buf_from[i] == '\t')  {
+            while(buf_from[i] == ' ' || buf_from[i] == '\t') {
                 ++i;
                 ++removed;
             }
@@ -89,3 +88,4 @@ int rm_trail_blanks_and_tabs(char buf_from[], char buf_to[])
     buf_to[j] = '\0';
     return removed;
 }
+

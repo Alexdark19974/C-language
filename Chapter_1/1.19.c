@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdio.h>
 #define MAXLINE 1000    /* maximum input line size */
-
 int get_line(char line[], int maxline);
 void copy (char to[], char from[]);
 void reverse(char buf[]);
@@ -44,7 +43,7 @@ int get_line(char s[], int lim)
 void reverse(char buf[])
 {
     int i, j, len, tmp;
-    
+
     for (i = 0, len = 0; buf[i] != '\0'; ++i)
         ++len;
     if (buf[len - 1] == '\n')
@@ -55,3 +54,4 @@ void reverse(char buf[])
         buf[j] = tmp;
     }
 }
+

@@ -14,7 +14,8 @@ main()
             tb++;
         if (c == '\n')
             nl++;
-        printf("ASCI char: %d\n", c); 
+        printf("ASCI char: %d\n", c);
     }
     printf("bls = %d\ntabs = %d\nnls = %d\n", bl, tb, nl);
 }
+

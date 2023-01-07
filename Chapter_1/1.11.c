@@ -18,7 +18,7 @@ main()
         else if (state == OUT) {
             state = IN;
             ++nw;
-        }     
+        }
     }
     printf("%d %d %d\n", nl, nw, nc);
 }
@@ -27,3 +27,4 @@ main()
  * bug 1: one character, i.e 'f' does not constitue a word, therefore it may be considered a bug.
  * bug 2: There is a difference between 'a' as an article and 'a' as a single non-sensical character.
  * */
+

@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #define MAXLINE 1000    /* maximum input line size */
 #define TABSTOP 8
 int max;            /* maximum length seen so far */
@@ -57,8 +56,7 @@ void copy(void)
 void entab(void)
 {
     int i, j, counter, temp;
-    /* alexander  petrov > alexander\t petrov
-     *' '' '' ' - \t\t' '*/
+
     i = j = counter = 0;
     while (longest[i] != '\0') {
         if (i == 0 && longest[i] == ' ' && longest[i + 1] == ' ') {
@@ -94,3 +92,4 @@ void entab(void)
     }
     entabbed_line[j] = '\0';
 }
+

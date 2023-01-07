@@ -38,7 +38,7 @@ main()
    printf(", white space = %d, other = %d\n",
        nwhite, nother);
 
-   printf("----Horizontal histogram-----\n"); 
+   printf("----Horizontal histogram-----\n");
    for (i = 0; nwordlen[i] != 0; ++i) {
        printf("word%d: ", i + 1);
        for (c = nwordlen[i]; c > 0; --c)
@@ -66,3 +66,4 @@ main()
    }
    putchar('\n');
 }
+
