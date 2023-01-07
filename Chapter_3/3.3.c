@@ -38,8 +38,10 @@ int get_line(char line[], int lim)
     c = 0;
     for (i=0;i<lim-1 && (c = getchar())!=EOF && c!='\n'; ++i)
         line[i] = c;
+
     if (c == '\n')
         line[i++] = c;
+
     line[i] = '\0';
     return i;
 }
