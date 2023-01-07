@@ -1,62 +1,110 @@
 #include <stdio.h>
+#include <limits.h>
 #include <string.h>
-#define MAX 100
-/*In a two's complement number representation, our version of itoa does not handle the largest negative number, that is, the value of n equal to -(2 to the power (wordsize - 1)) . Explain why not. Modify it to print that value correctly regardless of the machine on which it runs.
-*/
-void reverse (char[]);
-void itoa(int, char[]);
+#include <ctype.h>
+#define MAXLINE 1000
+#define ERR -1
+int get_line(char line[], int lim);
+int atoi(char s[]);
+void itoa(int n, char s[]);
+void reverse(char s[]);
 
-int main(void)
+main()
 {
-    int n = -2147483648;
-    char array[MAX];
+    int len, n;
+    char line[MAXLINE];
 
-    itoa(n, array);
-    printf("\n%s\n", array);
+    /*
+     * Not really necessary 
+     * but it is nice 
+     * to have INT_MIN & INT_MAX 
+     * in front of your face for 
+     * simplicity's sake
+     * */
+    printf("INT MIN=%d\n", INT_MIN);
+    printf("INT MAX=%d\n", INT_MAX);
+    for (len = 0; len < MAXLINE; ++len)
+        line[len] = 0;
+    printf("Enter the line: ");
+    while ((len = get_line(line, MAXLINE)) > 0) {
+        if (len > 0) {
+            n = atoi(line);
+            printf("atoi'ed number=%d\n", n);
+            itoa(n, line);
+            printf("itoa'ed line: %s\n", line);
+        }
+        printf("Enter the line: ");
+    }
 
     return 0;
 }
 
-void itoa (int n, char array[])
+int get_line(char line[], int lim)
 {
-    int i = 0;
-    int sign = 0;
+    int i, c;
 
-    if ((sign = n) < 0) // if int is negative, convert into positive
-    {
-        n = -n + 1; // -2147483648 > -2147483647
-        n = -n; //-2147483647 > 2147483647 (limit of signed int)
-        printf("%d\n", n);
+    c = 0;
+    for (i=0;i<lim-1 && (c = getchar())!=EOF && c!='\n'; ++i)
+        line[i] = c;
+
+    if (c == '\n')
+        line[i++] = c;
+
+    line[i] = '\0';
+    return i;
+}
+
+/* atoi:  convert s to integer; version 2 */
+int atoi(char s[])
+{
+    int i, n, sign;
+
+    for (i = 0; isspace(s[i]); i++)  /* skip white space */
+        ;
+    sign = (s[i] == '-') ? -1 : 1;
+    if (s[i] == '+' || s[i] == '-')  /* skip sign */
+        i++;
+    for (n = 0; isdigit(s[i]); i++)
+        n = 10 * n + (s[i] - '0');
+    return sign * n;
+}
+
+/* itoa:  convert n to characters in s */
+void itoa(int n, char s[])
+{
+    int i, sign;
+
+    /*
+     * The following line is a point of failure since
+     * INT_MIN = -2147483648 and INT_MAX = 2147483647
+     * so signed int cannot contain 214748648
+     * if attempted to convert, we will get -2147483648
+     * -2147483648 % 10 + '0' = 40 = '('
+     * */
+    if ((sign = n) < 0) { /* record sign */
+        if (n == INT_MIN) {
+            n++; sign = n - 1;
+        }
+        n = -n;          /* make n positive */
     }
-    do
-    {
-        printf("%c ", array[i++] = n % 10 + '0');
-        /*
-        2147483647 % 10 > 7 + '0' = char 7.
-        */
-
-    } while ((n /= 10) > 0); //division of 2147483647 / 10 cuts the rightmost number 1 by 1 : 7, 4, 6, etc.
-
+    i = 0;
+    do {        /* generate digits in reverse order */
+        s[i++] = n % 10 + '0';  /* get next digit */
+    } while ((n /= 10) > 0);     /* delete it */
     if (sign < 0)
-    {
-        array[i++] = '-'; // saving '-' char
-    }
-    array[i] = '\0';
-
-    reverse(array);
+        s[i++] = '-';
+    s[i] = '\0';
+    reverse(s);
+    if (sign == INT_MIN)
+        s[i - 1] = s[i - 1] + 1;
 }
-void reverse (char array[])
+
+/* reverse:  reverse string s in place */
+void reverse(char s[])
 {
-    int c = 0;
-    int i = 0;
-    int j = 0;
+    int c, i, j;
 
-    for (i = 0, j = strlen(array) - 1; i < j; i++, j--)
-    {
-        c = array[i];
-        array[i] = array[j];
-        array[j] = c; // reverse cycle reverses elements in half due to i++, j--
-
-    }
-    array[strlen(array) - 1] += 1; // -2147483647 + 1 > 2147483648
+    for (i = 0, j = strlen(s)-1; i < j; i++, j--)
+        c = s[i], s[i] = s[j], s[j] = c;
 }
+

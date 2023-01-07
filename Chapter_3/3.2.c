@@ -1,161 +1,94 @@
 #include <stdio.h>
-#define MAX 100
+#define MAXLINE 1000
+#define MAXELEMENT 10
+int get_line(char line[], int lim);
+void escape(char s[], char t[]);
+void un_escape(char s[], char t[]);
 
-/*Write a function escape(s,t) that converts characters like newline and tab into visible escape sequences like \n and \t as it copies the string t to s . Use a switch . Write a function for the other direction as well, converting escape sequences into the real characters. */
-
-char escape(char[], char[]);
-char reverse_escape(char[], char[]);
-int get_line(char[], int);
-
-int main(void)
+main()
 {
-    char from[MAX];
-    char to[MAX];
-    char to_1[MAX];
-    int length = 0;
+    int len;
+    unsigned int n;
+    char line[MAXLINE];
+    char esc_line[MAXLINE];
 
-    while ((length = get_line(from, MAX)) > 0)
-    {
-        escape(to,from);
-        printf("%s\n", to);
-        reverse_escape(to_1, to);
-        printf("%s", to_1);
+    for (n = 0; n != MAXLINE; ++n)
+        line[n] = esc_line[n] = 0;
+
+    printf("Enter the line: ");
+    while ((len = get_line(line, MAXLINE)) > 0) {
+        if (len > 0) {
+            escape(esc_line, line);
+            printf("Escaped line: %s\n", esc_line);
+            for (n = 0; line[n] != 0; ++n)
+                line[n] = 0;
+            un_escape(line, esc_line);
+            printf("Un-escaped line: %s\n", line);
+        }
+        printf("Enter the line: ");
     }
+
     return 0;
 }
 
-char reverse_escape(char to_1[], char to[])
+int get_line(char line[], int lim)
 {
-    int i = 0;
-    int j = 0;
-    while (to[i] != '\0')
-    {
-        switch(to[i])
-        {
-            case '\\' :
-            {
-                switch(to[++i])
-                {
-                    case 'n' : 
-                    {
-                        to_1[j] = '\n';
-                        break;
-                    }
+    int i, c;
 
-                    case 't' : 
-                    {
-                        to_1[j] = '\t';
-                        break; 
-                    }
-                    
-                    case '\'': 
-                    {
-                        to_1[j] = '\'';
-                        break;
-                    }
-                    
-                    case '\"': 
-                    {
-                        to_1[j] = '\"';
-                        break;
-                    }
-                    
-                    default: 
-                    {
-                        to_1[j] = to[--i];
-                        break;
-                    }
-                }
-            }
-            ++j;
-            if (to[++i] == '\\')
-            {
-                --i;
-                break;
-            }
-            default :
-            {
-                to_1[j++] = to[i];
-                break;
-            } 
-        }
-        ++i;
-    }
-    to_1[j] = to[i];
-}
+    c = 0;
+    for (i=0;i<lim-1 && (c = getchar())!=EOF && c!='\n'; ++i)
+        line[i] = c;
 
-char escape(char to[], char from[])
-{
-    int i = 0;
-    int j = 0;
-    while (from[i] != '\0')
-    {
-        switch(from[i])
-        {
-            case '\\' : 
-            {
-                to[j++] = '\\';
-                break;
-            }
-            case '\n' :
-            {
-                to[j++] = '\\';
-                to[j++] = 'n';
-                break;
-            }
+    if (c == '\n')
+        line[i++] = c;
 
-            case '\t': 
-            {
-                to[j++] = '\\';
-                to[j++] = 't';
-                break;
-            }
-
-            case '\'' : 
-            {
-                to[j++] = '\\';
-                to[j++] = '\'';
-                break;
-            }
-
-            case '\"' : 
-            {
-                to[j++] = '\\';
-                to[j++] = '\"';
-                break;
-            }
-
-            default :
-            {
-                to[j++] = from[i];
-                break;
-            }
-        }
-        i++;
-    }
-    to[j] = '\0';
-    
-}
-int get_line(char from[], int max)
-{
-    int i = 0;
-    int c = 0;
-
-    while (i < MAX - 2 && (c = getchar()) != EOF && c != '\n')
-    {
-        from[i] = c;
-        ++i;
-    }
-    if (c == '\n');
-    {
-        from[i] = c;
-        ++i;
-        from[i] = '\0';
-    }
-    if (c == EOF)
-    {
-        from[i] = '\0';
-        return i;
-    }
+    line[i] = '\0';
     return i;
 }
+
+void escape(char s[], char t[])
+{
+    int i, j;
+
+    for (i = 0, j = 0; t[i] != '\0'; ++i, ++j) {
+        switch(t[i]) {
+            case '\n':
+                s[j++] = '\\';
+                s[j] = 'n';
+                break;
+            case '\t':
+                s[j++] = '\\';
+                s[j] = 't';
+                break;
+            default:
+                s[j] = t[i];
+                break;
+        }
+    }
+    s[j] = '\0';
+}
+
+void un_escape(char s[], char t[])
+{
+    int i, j;
+
+    for (i = 0, j = 0; t[i] != '\0'; ++i, ++j) {
+        switch(t[i]) {
+            case '\\':
+                if (t[i + 1] == 'n') {
+                    s[j] = '\n';
+                    i++;
+                }
+                else if (t[i + 1] == 't') {
+                    s[j] = '\t';
+                    i++;
+                }
+                break;
+            default:
+                s[j] = t[i];
+                break;
+        }
+    }
+    s[j] = '\0';
+}
+
