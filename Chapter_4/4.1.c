@@ -1,67 +1,51 @@
 #include <stdio.h>
 #include <string.h>
-#define MAXLINE 1000
+#define MAXLINE 1000    /* maximum input line length */
 
-int get_line(char[], int);
-int strindex(char[], char[]);
-char pattern[] = "ould";
+int get_line(char line[], int max);
+int strindex(char source[], char searchfor[]);
 
-/*Write the function strrindex(s,t) , which returns the position of the rightmost occurrence of t in s , or -1 if there is none.*/
+char pattern[] = "ould";    /* pattern to search for */
 
-int main(void)
+/* find all lines matching pattern */
+main()
 {
     char line[MAXLINE];
-    int index = 0;
+    int found = 0, idx = 0;
 
     while (get_line(line, MAXLINE) > 0)
-    {
-        if ((index = strindex(line, pattern)) >= 0)
-        {
-            printf("%d\n", index);
+        if ((idx = strindex(line, pattern)) >= 0) {
+            printf("the rightmost occurence=%d, line: %s", idx, line);
+            found++;
         }
-    }
-    return 0;
+    return found;
 }
 
-int get_line(char charline[], int maxline) 
+/* getline: get line into s, return length */
+int get_line(char s[], int lim)
 {
-    int i = 0, c = 0;
+    int c, i;
 
-    for (i = 0; --maxline > 0 && (c = getchar()) != EOF && c!= '\n';)
-    {
-        charline[i++] = c;
-    }
+    i = c = 0;
+    while (--lim > 0 && (c = getchar()) != EOF && c!= '\n')
+        s[i++] = c;
     if (c == '\n')
-    {
-        charline[i++] = c;
-        charline[i] = '\0';
-    }
-    if (c == EOF)
-    {
-        charline[i] = '\0';
-        puts("");
-    }
+        s[i++] = c;
+    s[i] = '\0';
     return i;
 }
 
-
-int strindex (char s[], char t[])
+/* strindex: return index of t in s, -1 if none */
+int strindex(char s[], char t[])
 {
-    int i = 0;
-    int k = 0;
-    int j = 0;
+    int i, j, k;
 
-    for (i = strlen(s) - 2; i >= 0; i--)
-    {
-        for (j = i, k = strlen(t) - 1; k >= 0 && s[j] == t[k]; j--, k--)
-        {
+    for (i = strlen(s) - 1; i >= 0; i--) {
+        for (j=i, k = strlen(t) - 1; k >= 0 && s[j]==t[k]; j--, k--)
             ;
-            if (!k)
-            {
-                return j;
-            }
-        }
+        if (k <= 0)
+            return j;
     }
-
     return -1;
 }
+
