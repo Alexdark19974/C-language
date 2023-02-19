@@ -1,32 +1,42 @@
 #include <stdio.h>
-#define MAX 100
+#define MAXLINE 1000
 
-char *strconcat (char *, char *);
+int get_line(char *, int);
+void _strcat(char *, char *);
 
-int main(void)
+main()
 {
-    char arr_1[MAX] = "Might and ";
-    char arr_2[MAX] = "Magic";
-
-    char *conc_string_p = strconcat(arr_1, arr_2);
-    printf("%s\n", conc_string_p);
+    char str1[MAXLINE] = {0};
+    char str2[MAXLINE * 2] = "I am a string";
+    int len = 0;
+    printf("Enter the string: ");
+    while ((len = get_line(str1, MAXLINE) != EOF)) {
+        if (len > 0) {
+            _strcat(str2, str1);
+            printf("The resulting string is %s", str2);
+        }
+        printf("Enter the string: ");
+    }
 
     return 0;
 }
 
-char *strconcat(char *s, char *t)
+int get_line(char *s, int lim)
 {
-    char *s_p = s;
-    char *t_p = t;
+    int i, c = 0;
 
-    while (*s_p)
-    {
-        s_p++;
-    }
-    
-    while ((*s_p++ = *t_p++))
-    {
-        ;
-    }
-    return s;
+    for (i = 0; (i < lim) && ((c = getchar()) != EOF) && (c != '\n'); ++i)
+        s[i] = c;
+    if (c =='\n')
+        s[i++] = c;
+
+    s[i] = '\0';
+    return c == EOF ? EOF : i;
+}
+
+void _strcat(char *dest, char *src)
+{
+    while (*dest++) ;
+    dest--;
+    while ((*dest++ = *src++)) ;
 }
