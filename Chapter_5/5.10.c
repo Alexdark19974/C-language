@@ -1,286 +1,170 @@
-  
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <string.h>
 #include <ctype.h>
-#include <math.h>
-#define MAXOP 100
-#define MAXVAL 100
-#define BUFSIZE 100
-#define NUMBER '0'
-#define MYEOF '1'
-
-/*
-Write the program expr , which evaluates a reverse Polish expression from the command line, where each operator or operand is a separate argument. For example,
-expr 2 3 4 + *
-evaluates 2 X (3 + 4).
-*/
-
-int sp = 0;
-double val[MAXVAL];
-char buf[BUFSIZE];
-char s[MAXVAL];
-int bufp = 0;
-int flag = 0;
-int close_get_line = 0;
-
+#define MAXOPS 1000
+#define MAXDIGITS 1000
+#define MAXSTRING 1000
+#define TRUE 1
+#define FALSE 0
 
 int getop(char *);
-void push(double);
-double pop(void);
-void get_line(char *, int);
-double stack_top(void);
-void dublicate(void);
-void swap(void);
-void free_stack(void);
+int expr(char **argv);
+int calc_ratio(char **argv);
+double pop(double *, int *);
+void push(double *, char *, int *);
+void evaluate(double *, char **, int, int);
+void add_brackets(int, char);
+void exit_on_sig(int);
+enum { ERR = -1, NUMBER = 1, OP = 2, FLOAT = 3 };
 
-int main(int argc, char *argv[])
+main(int argc, char *argv[])
 {
-    printf("argc %d \n", argc);
+    if (argc < 4)
+        return printf("Usage: -f 2 3 +\n");
+    signal(SIGSEGV, exit_on_sig);
+    if (ERR == calc_ratio(argv + 1)|| ERR == expr(argv))
+            goto error;
     return 0;
-    int type = 0;
-    double op2;
-    int op_2;
-    int op_1;
-    char s[MAXOP];
-    int lock = 0;
-    double variable;
+error:
+    return printf("Exited with an error.\n");
+}
 
+int expr(char **argv)
+{
+    double digits[MAXDIGITS] = {0.0};
+    int i = 0, opt = 0, is_float = 0;
 
-    while (--argc > 0 && (type = getop(*++argv)))
-    {
-        printf("argc %d \n", argc);
-        printf("type is %c \n", type);
-        switch (type)
-        {
-           case MYEOF:
-            {
-                printf ("\t%.8g\n", pop());
-                return 0;
-            }
-            case 'a': case 'b' : case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
-            {
-                variable = pop();
-                printf("the value of the latest printed variable \'%c\' is %.8g\n", (char) type, variable);
-                lock = 1;
-                break;
-            }
+    while(*++argv) {
+        switch(opt = getop(*argv)) {
             case NUMBER:
-            {
-                printf("1) argv is %s\n", *argv);
-                printf("2) atofed argv is %lf\n", atof(*argv));
-                printf("3 ) flag is %d\n", flag);
-
-                double number = atof(*argv);
-                push(number);
+                push(digits, *argv, &i);
                 break;
-            }
-            case '+':
-            {
-                push(pop() + pop());
+            case OP:
+                goto evaluate_me;
+            case FLOAT:
+                is_float = TRUE;
                 break;
-            }
-            case '-':
-            {
-                op2 = pop();
-                push(pop() - op2);
-                break;
-            }
-            case '*':
-            {
-                push(pop() * pop());
-                return EOF;
-                break;
-            }
-            case '/':
-            {
-                op2 = pop();
-
-                if (op2 != 0.0)
-                {
-                    push(pop() / op2);
-                }
-                else
-                {
-                    printf("error: zero divisor\n");
-                }
-                break;
-            }
-            case '%':
-            {
-                op_2 = pop();
-                op_1 = pop();
-                push(op_1 % op_2);
-                break;
-            }
-            case '?':
-            {
-                printf("the top of the stack is %.8g\n", stack_top());
-                lock = 1;
-                break;
-            }
-            case '!':
-            {
-                dublicate();
-                printf("%.8g is the dublicate of the stack's top %.8g\n", pop(), pop());
-                lock = 1;
-                break;
-            }
-            case '>':
-            {
-                swap();
-                printf("the result of swap is %.8g and %.8g\n", pop(), pop());
-                lock = 1;
-                break;
-            }
-            case '#':
-            {
-                free_stack();
-                printf("stack has been cleared\n");
-                lock = 1;
-                break;
-            }
-            case '^':
-            {
-                push(pow(pop(), pop()));
-                break;
-            }
-            case '$':
-            {
-                push(sin(pop()));
-                break;
-            }
-            case '@':
-            {
-                push(exp(pop()));
-                break;
-            }
             default:
-            {
-                if (!lock)
-                {
-                    printf("error: unknown command %s\n", s);
-                    break;        
-                }
-                lock = 0;
+                printf("Error: unknown value=%s\n", *argv);
+                goto error;
                 break;
-            }
-            
         }
     }
-    printf ("\t%.8g\n", pop());
+evaluate_me:
+    if (i <= 1)
+        goto error;
+    evaluate(digits, argv, i, is_float);
     return 0;
+error:
+    return ERR;
 }
 
 int getop(char *argv)
 {
-    if (*argv == '-')
-    {
-        printf("is MINUS\n");
+    char actionType = 0;
 
-        if (isdigit(*++argv))
-        {
-            flag = -1;
-        }
-    }
-    
-    if (!isdigit(*argv) && *argv  != '.' && *argv != ' ' && *argv != '\t' && *argv != EOF)
-    {
-        return *argv;
-    }
-
-    if (isdigit(*argv))
-    {
-        while (isdigit(*++argv)) // c = s c = c
-        {
-           ;
-        }
-    }
-
-    /*if (*argv  == '.')
-    {
-        while(isdigit(s[length]))
-        {
-            length++;
-        }
-        length--;
-    } */
-    return NUMBER;
-}
-
-void push(double f)
-{
-    if (sp < MAXVAL)
-    {
-       val[sp] = f; 
-
-       if (val[sp] == -0.0)
-       {
-           val[sp] = 0.0;
-       }
-
-       sp++;
-       flag = 0;
-       printf("push: %lf\n", val[sp - 1]);
-    }
+    if (isdigit(*argv) && (isdigit(*(argv + 1)) || *(argv + 1) == '.' || *(argv + 1) == '\0'))
+        actionType = NUMBER;
+    else if (!strcmp(argv, "-f"))
+        actionType = FLOAT;
+    else if (!isdigit(*argv) && (*argv == '+' || *argv == '-' || *argv == '*' || *argv == '/') && *(argv + 1) == '\0')
+        actionType = OP;
+    else if (!isdigit(*argv) && isdigit(*(argv + 1)))
+        actionType = NUMBER;
     else
+        actionType  = ERR;
+    return actionType;
+}
+
+double pop(double *arrp, int *i)
+{
+    *i = *i - 1;
+    double tmp = *(arrp + *i);
+
+    return tmp;
+}
+
+void push(double *arrp, char *argv, int *i)
+{
+    *(arrp + *i) = atof(argv);
+    *i = *i + 1;
+}
+
+void evaluate(double *digits, char **ops, int i, int is_float)
+{
+    double buf[MAXSTRING] = {0.0};
+    int idx = 0, tmp_ops = 0;
+    /*we write the whole expression to buf backwards including operations without brackets*/
+    while (i) {
+        buf[idx++] = pop(digits, &i);
+        if (*ops != NULL) {
+            if (**ops == '-' && *(*ops + 1) != '\0') {
+                if (*(*ops + 1) == 'f') { // check if there's "floating" option
+                    is_float = TRUE;
+                    break;
+                } else
+                    goto error;
+            }
+            tmp_ops++;
+            buf[idx++] = **ops++;
+        }
+    }
+    i = --idx;
+    /* we read the expression from the end because we applied stack-like push() and pop() functions + LIFO
+      the end result is 2 5 10 + \* becomes 2 * (5 + 10) */
+    printf("expr: ");
+    do {
+        if (tmp_ops > 1 && i != idx && idx) // skip the first num (we don't need "(5)" ), then add a bracket if necessary
+            add_brackets(tmp_ops, '(');
+        is_float == TRUE ? printf("%.2lf", buf[idx--]) : printf("%d",(int)buf[idx--]);
+        if (idx < 0)
+            break;
+        printf(" %c ",(char)buf[idx--]);
+    } while(idx >= 0);
+    if (tmp_ops > 1)
+        add_brackets(tmp_ops - 1, ')'); // add brackets in while loop if necessary
+    putchar('\n');
+    return;
+error:
+    printf("error: option %s is not available.\n", *ops);
+}
+
+void exit_on_sig(int sig_num)
+{
+    switch(sig_num)
     {
-        printf("error: stack full, can't push %g\n", f);
+        case SIGSEGV:
+            printf("SIGSEGV: access to unavailable memory area.\n");
+            break;
+        default:
+            printf("Signal %d received\n", sig_num);
+            break;
     }
 }
 
-double pop(void)
+void add_brackets(int bracket_num, char bracket)
 {
-    if (sp > 0)
-    {
-        return val[--sp];
-    }
+    if (bracket == ')')
+        while (bracket_num--)
+            putchar(')');
     else
-    {
-        printf("error: stack empty\n");
-        return 0.0;
-    }
+        putchar('(');
 }
 
-double stack_top(void)
+int calc_ratio(char **argv)
 {
-    return val[sp - 1];
-}
-void dublicate(void)
-{
-    val[sp] = val[sp - 1];
-    sp++;
-}
-void swap(void)
-{
-    double tmp = 0.0;
-    tmp = val[0];
-    val[0] = val[sp - 1];
-    val[sp - 1] = tmp;
-}
-void free_stack(void)
-{
-    for (int i = 0; i <= sp; i++)
-    {
-        val[i] = 0;
-    }
-    sp = 0;
-}
+    int digits = 0, ops = 0;
 
-void get_line(char *charline, int maxlen) 
-{
-    int c = 0;
-
-    for (; --maxlen > 0 && (c = getchar()) != EOF && c!= '\n';)
-    {
-        *charline++ = c;
+    while (*argv != NULL && isdigit(**argv++))
+        digits++;
+    argv--;
+    while (*argv != NULL && argv++ != NULL)
+        ops++;
+    if (!ops || !((digits - ops) % 2)) {
+        printf("error: unbalanced number of args.\n");
+        return ERR;
     }
-    if (c == '\n')
-    {
-        *charline++ = c;
-        *charline = '\0';
-    }
-    if(c == EOF)
-    {
-       *charline = '\0';
-    }
+    return 0;
 }

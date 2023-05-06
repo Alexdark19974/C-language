@@ -1,50 +1,74 @@
 #include <stdio.h>
-#define MAX 100
-#define TRUE 1
-#define FALSE 0
+#define MAXLINE 1000
 
-char *strconcat (char *, char *);
+int get_line(char *, int);
+void _strcat(char *, char *);
+int _strcmp(char *, char *);
 int strend(char *, char *);
 
-int main(void)
+main()
 {
-    char arr_1[MAX] = "Might and ";
-    char arr_2[MAX] = "Magic";
-
-    char *conc_string_p = strconcat(arr_1, arr_2);
-    printf("%s\n", conc_string_p);
-
-    printf("%d\n", strend (conc_string_p, arr_2));
+    char str1[MAXLINE] = {0};
+    char str2[MAXLINE * 2] = "I am a string";
+    int len = 0, is_strcat = 1;
+    printf("Enter the string: ");
+    while ((len = get_line(str1, MAXLINE) != EOF)) {
+        if (len > 0) {
+            if (is_strcat) {
+                _strcat(str2, str1);
+                printf("The resulting string is %s", str2);
+            }
+            else if (!is_strcat && strend(str2, str1))
+                printf("strend() found str1=%s in str2=%s", str1, str2);
+            else
+                printf("strend() didn't find str1=%s in str2=%s", str1, str2);
+            is_strcat == 0 ? is_strcat = 1: is_strcat--;
+        }
+        printf("Enter the string: ");
+    }
 
     return 0;
 }
 
-char *strconcat(char *s, char *t)
+int get_line(char *s, int lim)
 {
-    char *s_p = s;
-    char *t_p = t;
+    int i, c = 0;
 
-    while (*s_p)
-    {
-        s_p++;
-    }
-    
-    while ((*s_p++ = *t_p++))
-    {
-        ;
-    }
-    return s;
+    for (i = 0; (i < lim) && ((c = getchar()) != EOF) && (c != '\n'); ++i)
+        s[i] = c;
+    if (c =='\n')
+        s[i++] = c;
+
+    s[i] = '\0';
+    return c == EOF ? EOF : i;
 }
 
-int strend(char *s, char *t)
+void _strcat(char *dest, char *src)
 {
-    //printf("%s", s);
-    while (*s++)
-    {
-        if (*s == *t)
-        {
-            return TRUE;
-        }
+    while (*dest++) ;
+    dest--;
+    while ((*dest++ = *src++)) ;
+}
+
+int strend(char *s, char *t) 
+{
+    int len1 = 0, len2 = 0;
+    while(*s++)
+        len1++;
+    --s;
+    while(*t++)
+        len2++;
+    --t;
+    while (*--t == *--s)  {
+        if (len2-- == 0 || len1-- == 0) 
+            break;
     }
-    return FALSE;
+    return len2 == 0 ? 1 : 0;
+}
+
+/* strcmp:  return <0 if s < t, 0 if s==t, >0 s>t */
+int _strcmp(char *s, char *t)
+{
+    while (*s++ == *t++) ;
+   return  *s == '\0' ? 0 : *s - *t;
 }

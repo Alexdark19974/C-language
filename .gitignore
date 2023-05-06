@@ -1,0 +1,5 @@
+*.py
+*.o
+*.clangd
+*.ycm
+*/bin

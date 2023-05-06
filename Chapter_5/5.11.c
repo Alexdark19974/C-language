@@ -1,99 +1,119 @@
 #include <stdio.h>
-#define MAXL 1000
-#define TAB 8
+#include <stdlib.h>
+#include <ctype.h>
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
 
-int get_line (char[], int);
-void entab (char[], char[]);
+int get_line(char *, int);
+void copy(void);
+void entab(char *, char *, int);
+void detab(char *, char *, int);
 
-int main (void)
+/* print longest input line */
+main(int argc, char **argv)
 {
-    char s[MAXL], s_edited[MAXL];
-    int len;
-    while ((len = get_line(s, MAXL)) > 0)
-    {
-        entab(s_edited, s);
-        printf("%s", s_edited);   
+    enum { DETAB = 0, ENTAB = 1 };
+    int tabstop, len, is_entab;
+    char line[MAXLINE], deentabbed_line[MAXLINE];
+
+    if (argc > 1) {
+        if (**(++argv) == '-')
+            ++(*argv) != NULL && **argv == 'e' ? is_entab = ENTAB : (is_entab = DETAB);
+        ++(*argv) != NULL &&(isdigit(**(++argv))) ? tabstop = atoi(*argv) : (tabstop = TABSTOP);
     }
-    return 0;
+    printf("\"-e\" - entab mode, \"-d\" - detab mode, \"t\" - tab, \"b\" - blank, tabstop = %d\n", tabstop);
+    while ((len = get_line(line, MAXLINE)) > 0) {
+        if (*line == '\n')
+            continue;
+        printf("%s", is_entab == ENTAB ? "entab mode\n" : "detab mode\n");
+        switch (is_entab) {
+            case ENTAB:
+                entab(deentabbed_line, line, tabstop);
+                break;
+            case DETAB:
+                detab(deentabbed_line, line, tabstop);
+                break;
+            default:
+                goto error;
+        }
+        printf("%s %s\n", is_entab == ENTAB ? "entabbed line: " : "detabbed line: ", deentabbed_line);
+    }
+    return printf("Succesfully finished.\n");
+error:
+    printf("Finished with an error: such a mode doesn't exist.\n");
 }
-int get_line (char s[], int max)
-{
-    int c, i = 0;
 
-    for (i = 0; i < MAXL - 2 && (c = getchar()) != EOF && c != '\n'; i++)
-    {
-        s[i] = c;
+/* getline: read a line into s, return length */
+int get_line(char *line, int max)
+{
+    int c, i;
+
+    for (i=0; i<max-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
-    if (c == '\n')
-    {
-        s[i] = c;
-    }
-    else if (c == EOF)
-    {
-        s[i] = '\0';
-        puts("");
-        return i;
-    }
-    i++;
-    s[i] = '\0';
+    line[i] = '\0';
     return i;
 }
-void entab (char s_edited[], char s[])
+
+void entab(char *entabbed_line, char *line, int tabstop)
 {
-    int i = 0, j = 0, b_count = 0, t_count = 0;
-    int s_count = 1;
+    int counter = 0, temp;
 
-    while (s[j] != '\0')
-    {
-        if (s[j] == ' ')
-        {
-
-            if (s_count % TAB != 0)
-            {
-                b_count++;
-                j++;
-            }
-            else
-            {
-                t_count++;
-                b_count = 0;
-                j++;
-                 s_count = 1;
-
-            }
-        }
-        else if (s[j] != ' ')
-        {
-            if (t_count > 0)
-            {
-                while (t_count > 0)
-                {
-                    s_edited[i] = '\t';
-                    i++;
-                    t_count--;
+    while (*line) {
+        if (!counter && *line == ' ' && *(line + 1) == ' ') {
+            while (*line == ' ') {
+                line++, ++counter;
+                if ((counter % tabstop) == 0) {
+                    *entabbed_line = 't'; entabbed_line++; counter = 0;
                 }
             }
-            if (b_count > 0)
-            {
-                while (b_count > 0)
-                {
-                    s_edited[i] = ' ';
-                    i++;
-                    b_count--;
+            temp = counter % tabstop;
+            while (temp > 0) {
+                *entabbed_line = 'b'; entabbed_line++; --temp;
+            }
+        }
+        *entabbed_line = *line;
+        if (*line == ' ' && *(line + 1) == ' ') {
+            while (*line == ' ') {
+                line++; ++counter;
+                if ((counter % tabstop) == 0) {
+                   *entabbed_line = 't'; entabbed_line++; counter = 0;
                 }
             }
-
-            s_edited[i] = s[j];
-
-            if (s[j] == '\t')
-            {
-                s_count = TAB - (s_count % TAB); 
+            if (counter > 0 && (counter % tabstop) == 0)
+                --counter;
+            temp = counter % tabstop;
+            while (temp > 0) {
+               *entabbed_line = 'b';
+                entabbed_line++; --temp;
             }
-            i++;
-            j++;
-            
+            line--; entabbed_line--;
         }
-        s_count++;
+        line++; entabbed_line++; ++counter;
     }
-    s_edited[i] = '\0';
+    *entabbed_line = '\0';
+}
+
+void detab(char *detabbed_line, char *line, int tabstop)
+{
+    int counter = 0;
+
+    while (*line != '\0') {
+        *detabbed_line = *line;
+        if (*line == '\t') {
+            while (counter < TABSTOP) {
+                *detabbed_line++ = 'b'; // in order to make it easier, ' ' is replaced with 'b'
+                ++counter;
+            }
+            detabbed_line--; // to counteract one extra increment from the nested while loop
+            counter = -1; // next increment will make it 0
+        }
+        ++counter; line++; detabbed_line++;
+        if (counter == TABSTOP)
+            counter = 0;
+    }
+    *detabbed_line = '\0';
 }
