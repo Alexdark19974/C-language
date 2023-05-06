@@ -1,3 +1,5 @@
 *.py
 *.o
-/Chapter_5/5.6/bin
+*.clangd
+*.ycm
+*/bin

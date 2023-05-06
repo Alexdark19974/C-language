@@ -1,166 +1,145 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define MAXL 1000
-#define TAB 8
+#include <ctype.h>
+#define MAXLINE 1000    /* maximum input line size */
+#define TABSTOP 8
 
-int get_line (char *, int);
-void detab (char *, char *, int, char **);
+int get_line(char *, int);
+void copy(void);
+void entab(char *, char *, int, int);
+void detab(char *, char *, int, int);
 
-/* Extend entab and detab to accept the shorthand:
-    entab -m +n
-to mean tab stops every n columns; starting at column m.
-choose convenient size for the default behaviour */
-
-int main (int argc, char *argv[])
+/* print longest input line */
+main(int argc, char **argv)
 {
-    char s[MAXL];
-    char s_edited[MAXL];
-    int len = 0;
-    int c = 0;
-    int tab_start = 0;
-    int next_tab = 0;
+    enum { DETAB = 0, ENTAB = 1 };
+    int tabstop =-1, m = -1, n = -1, len, is_entab = ENTAB;
+    char line[MAXLINE], deentabbed_line[MAXLINE];
 
-    while ((--argc > 0 && (*++argv)[0] == '-') || ((*argv)[0] == '+'))
-    {
-        while ((c = *++argv[0]))
-        {
-            switch (c)
-            {
+    if (argc <= 1)
+        goto arg_error;
+    while(*++argv != NULL) {
+        if (**argv == '-' || **argv == '+' || isdigit(**argv)) {
+            switch(*(++*argv)) {
+                case 'e':
+                    printf("entab ");
+                    break;
+                case 'd':
+                    is_entab = DETAB;
+                    printf("detab ");
+                    break;
                 case 'm':
-                {
-                    if (*(*argv - 1) == '-')
-                    {
-                        tab_start = 1;
-                    }                    
+                    if (isdigit(**(++argv)))
+                        printf("-m %d ", m = atoi(*argv));
+                    else goto error;
                     break;
-                }
                 case 'n':
-                {
-                    if (*(*argv - 1) == '+')
-                    {
-                        next_tab = 1;
-                    } 
+                    if (isdigit(**(++argv)))
+                        printf("+n %d ", n = atoi(*argv));
+                    else goto error;
                     break;
-                }
                 default:
-                {
-                    printf("error: illegal option %c\n", c);
-                    return EOF;
-                }
-            }
+                    goto error;
+                    break;
+            };
         }
     }
-
-    if (!argc || !tab_start || !next_tab)
-    {
-        printf ("Usage: input -m and +n parameters\n");
-        return EOF;
-    }
-
-    while ((len = get_line(s, MAXL)) > 0)
-    {   
-        if (len > 0)
-        {
-            detab(s_edited, s, argc, argv);
-            printf("%s", s_edited);
+    putchar('\n');
+    if (n <= 0)
+        n = TABSTOP;
+    printf("Enter the line: ");
+    while ((len = get_line(line, MAXLINE)) > 0) {
+        if (*line == '\n')
+            continue;
+        switch (is_entab) {
+            case ENTAB:
+                entab(deentabbed_line, line, m, n);
+                break;
+            case DETAB:
+                detab(deentabbed_line, line, m, n);
+                break;
+            default:
+                goto error;
         }
+        printf("%s %s\n", is_entab == ENTAB ? "entabbed line: " : "detabbed line: ", deentabbed_line);
+        printf("Enter the line: ");
     }
-    return 0;
+    return printf("Succesfully finished.\n");
+error:
+    return printf("Finished with an error: such a mode doesn't exist.\n");
+arg_error:
+    return printf("error: not enough arguments.\n");
 }
-int get_line (char s[], int max)
+
+/* getline: read a line into s, return length */
+int get_line(char *line, int max)
 {
-    int c, i = 0;
-    for (i = 0; i < MAXL - 2 && (c = getchar()) != EOF && c != '\n'; i++)
-    {
-        s[i] = c;
+    int c, i;
+
+    for (i=0; i<max-1 && (c = getchar()) != EOF && c!='\n'; i++)
+        line[i] = c;
+    if (c == '\n') {
+        line[i] = c;
+        ++i;
     }
-    if (c == '\n')
-    {
-        s[i] = c;
-    }
-    else if (c == EOF)
-    {
-        s[i] = '\0';
-        return i;
-    }
-    i++;
-    s[i] = '\0';
+    line[i] = '\0';
     return i;
 }
-void detab (char s_edited[], char s[], int argc, char **argv)
+
+void entab(char *entabbed_line, char *line, int m, int n)
 {
-    int parameters = 0;
-    int left_over = 0;
-    int count = 0;
-    int detab = 0;
-    int m_columns = atoi(*argv);
-    int i = 0;
-    int j = 0;
+    int counter = 0, temp;
 
-    if (argc > 0)
-    {
-        parameters = 1;
-    }
-
-    while (s[j] != '\0')
-    {
-        if (parameters && argc > 0 && s[j] == '\t')
-        {
-            detab = atoi(*argv);
-
-            int res = detab - (count % detab) - left_over;
-            left_over = left_over + res;
-
-            if (res == m_columns)
-            {
-                while (res > 0)
-                {
-                    s_edited[i] = ' ';
-                    i++;
-                    res--;
+    while (*line) {
+        if (!counter && counter >= m && *line == ' ' && *(line + 1) == ' ') {
+            while (*line == ' ') {
+                line++, ++counter;
+                if ((counter % n) == 0) {
+                    *entabbed_line = 't'; entabbed_line++; counter = 0;
                 }
-                m_columns = 0;
-                left_over = 0;
             }
-
-            while (res > 0)
-            {
-                s_edited[i] = 'b';
-                i++;
-                res--;
-            }
-            j++;
-
-            if (argc != 0 && !m_columns)
-            {
-                argc--;
-                argv++;
-            }
-            else if (argc <= 0)
-            {
-                argc = 0;
+            temp = counter % n;
+            while (temp > 0) {
+                *entabbed_line = 'b'; entabbed_line++; --temp;
             }
         }
-        else if (!parameters && s[j] == '\t' && argc <= 0)
-        {
-            int res = TAB - (count % TAB); 
-
-            while (res > 0)
-            {
-                s_edited[i] = 'b';
-                i++;
-                res--;
+        *entabbed_line = *line;
+        if (counter >= m && *line == ' ' && *(line + 1) == ' ') {
+            while (*line == ' ') {
+                line++; ++counter;
+                if ((counter % n) == 0) {
+                   *entabbed_line = 't'; entabbed_line++; counter = 0;
+                }
             }
-            count = 0;
-            j++;
+            if (counter > 0 && (counter % n) == 0)
+                --counter;
+            temp = counter % n;
+            while (temp > 0) {
+               *entabbed_line = 'b';
+                entabbed_line++; --temp;
+            }
+            line--; entabbed_line--;
         }
-        else
-        {
-            s_edited[i] = s[j];
-            i++;
-            j++;
-            count++;
-        }
+        line++; entabbed_line++; ++counter;
     }
-    s_edited[i] = '\0';
+    *entabbed_line = '\0';
+}
+
+void detab(char *detabbed_line, char *line, int m, int n)
+{
+    int counter = 0;
+
+    while (*line != '\0') {
+        *detabbed_line = *line;
+        if (counter >= m && *line == '\t') {
+            int i = counter % n;
+            while (i < n) {
+                *detabbed_line++ = 'b'; // in order to make it easier, ' ' is replaced with 'b'
+                ++counter; i++;
+            }
+            detabbed_line--; // to counteract one extra increment from the nested while loop
+        }
+        ++counter; line++; detabbed_line++;
+    }
+    *detabbed_line = '\0';
 }
