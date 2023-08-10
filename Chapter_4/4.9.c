@@ -229,10 +229,15 @@ void duplicate_stack(void)
  * */
 int handle_variables(int c)
 {
+    int prev_c = c;
     if (!isalpha(c))
         return c;
     while (!isdigit(c = getch()) && c != '-' && c != '\n' && c != EOF)
         ;
+    if (c == '\n') {
+        ungetch(c);
+        c = prev_c;
+    }
     return c;
 }
 
