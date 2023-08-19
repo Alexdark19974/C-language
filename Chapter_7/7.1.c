@@ -1,32 +1,31 @@
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
+#include <ctype.h>
+enum Case { TOLOWER  = 1, TOUPPER, UNKNOWN };
 
-int main(int argc, char *argv[])
+main(int argc, char **argv) /* lower: convert input to lower case */
 {
+    int c, len = strlen(argv[0]) - 1;
+    enum Case reg = UNKNOWN;
 
-// the examination start from the end of the name of the program.
-// if the last letter is an upper case, the the program will convert everything to upper-case values: uppeR -> lower to upper, uPper -> upper to lower
-// if the last letter is an lower case, the program will convert everything to lower-case values: LOWEr -> upper to lower
+    for (; len > 0; len--)
+    {
+        if (argv[0][len] == '/')
+            if (!strcasecmp(&argv[0][len + 1], "toupper")) {
+                reg = TOUPPER;
+                break;
+            }
+    }
 
-	int c = 0;
+    if (reg == TOUPPER) {
+        while((c = getchar()) != EOF)
+            putchar(toupper(c));
+    }
+    else if (reg == TOLOWER) {
+        while((c = getchar()) != EOF)
+            putchar(tolower(c));
+    } else printf("Unknown option = %s.\n", &argv[0][len + 1]);
 
-	int len = strlen(*argv);
-
-	if (isupper(*(*argv + len - 1)))
-	{
-		while ((c = getchar()) != EOF)
-		{
-			putchar(toupper(c));
-		}
-	}
-	else
-	{
-		while ((c = getchar()) != EOF)
-		{
-			putchar(tolower(c));
-		}
-	}
-
-	return 0;
+    return 0;
 }
+
