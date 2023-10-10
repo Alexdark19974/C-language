@@ -1,72 +1,93 @@
-#ifndef SYSCALLS_H_
-#define SYSCALLS_H_
+#ifndef _SYSCALLS_H_
+#define _SYSCALLS_H_
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <malloc.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <ctype.h>
+#if defined (LSEEK_CASE)
+#define DEFAULT_SIZE    BUFSIZ
+#define DEFAULT_POS     0
+#define DEFAULT_OFFSET  0
+typedef struct params {
+    int offset;
+    int size;
+    long pos;
+} params, *paramsP;
+int read_and_print_file_at_pos(char **, params);
+int get(int , char *, params);
+#endif
+#if defined(FFUNC_CASE)
+#undef NULL
+#undef EOF
+#undef BUFSIZ
+#undef FILE
+#define NULL        0
+#define EOF         (-1)
+#define BUFSIZ      1024 // for proper null-termination
+#define OPEN_MAX    20 /*max #files open at once */
+#define PERMS       0666
+#define FLUSHED     0
+#define OK          0
+#define ERR      -1
+typedef struct _iobuf {
+    int  cnt;       /* characters left */
+    char *ptr;      /* next character position */
+    char *base;     /* location of buffer */
+    struct {
+        uint READ:  1;
+        uint WRITE: 1;
+        uint UNBUF: 1;
+        uint _EOF:  1;
+        uint _ERR:  1;
+    };
+    int flag;       /* mode of file access */
+    int fd;         /* file descriptor */
 
-#undef getc
-#undef getchar
-#undef putc
-#undef putchar
-#undef feof
-#undef ferror
-#undef fileno
+} _FILE;
+
+extern _FILE _iob[OPEN_MAX];
 #undef stdin
 #undef stdout
 #undef stderr
-#undef fopen
-#undef BUFSIZ
-#undef NULL
+#define stdin   (&_iob[0])
+#define stdout  (&_iob[1])
+#define stderr  (&_iob[2])
 
-#define NULL 		0
-#define EOF 		(-1)
-#define BUFSIZ 		1024
-#define OPEN_MAX	 20 /* максимальное количество открытых файлов */
-#define ON 1
-#define OFF 0
+enum _flags {
+    _READ   = 01,       /* file open for reading */
+    _WRITE  = 02,       /* file open for writing */
+    _UNBUF  = 04,       /* file is unbuffered */
+    _EOF    = 010,      /* EOF has occurred on this file */
+    _ERR    = 020       /* error ocurred on this file */
+};
 
-typedef struct _iobuf
-{
-    int cnt;        /* сколько осталось символов */
-    char *ptr;      /* следующая символьная позиция */
-    char *base;     /* местонахождение буфера */
-    struct
-	{
-		unsigned char read 	: 	1;
-		unsigned char write : 	1;
-		unsigned char bit6 	: 	1;
-		unsigned char unbuf : 	1;
-		unsigned char eof 	:   1;
-		unsigned char err 	:   1;
-		unsigned char b7 	: 	1;
-		unsigned char b8 	: 	1;
+_FILE *_fopen(char *, char *);
+int _fillbuf(_FILE *);
+int _fprintf(_FILE *, char *, ...);
+void _flushbuf(int, _FILE *);
+void __exit(void);
+int copy(char **);
 
-	} flags;       		/* режим доступа к файлу */
-    int fd;         /* дескриптор файлов */
+#define _feof(p)         (((p)->flag & _EOF) != 0)
+#define _ferror(p)       (((p)->flag & _ERR) != 0)
+#define _fileno(p)       ((p)->fd)
 
-} File;
-
-extern File _iob[OPEN_MAX];
-
-#define my_stdin	(&_iob[0])
-#define my_stdout	(&_iob[1])
-#define my_stderr	(&_iob[2])
-
-int _fillbuf(File *);
-int _flushbuf(int , File *);
-File *myfopen(char *, char *);
-
-#define feof(p)			(((p)->flags.eof == 1) ? 1 : 0)
-#define ferror(p)		(((p)->flags.err == 1) ? 1 : 0)
-#define fileno(p)		((p)->fd)
-
-#define getc(p)		((--(p)->cnt >= 0) ? (unsigned char) *(p)->ptr++ : _fillbuf(p))
-#define putc(x,p)	(--(p)->cnt >= 0 ? *(p)->ptr++ = (x) : _flushbuf((x), p))
-
-#define getchar() getc(my_stdin)
-#define putchar(x) putc((x), my_stdout)
-
+#undef  getc
+#define getc(p)     (--(p)->cnt >= 0 \
+                ?   (unsigned char) *(p)->ptr++: _fillbuf(p))
+#undef  putc
+#define putc(x,p)   (--(p)->cnt >= 0 \
+                ?   x != EOF ? (x == '\n' && (p) == &_iob[1]) ? _flushbuf((x), p) : (*(p)->ptr++ = (x)) : _flushbuf((x), p) : _flushbuf((x),p))
+#undef  getchar
+#define getchar()   getc(stdin)
+#undef  putchar
+#define putchar(x)  putc((x), stdout)
+#endif
+int get_char(void);
+void put_char(int);
+void _error(char *, ...);
 #endif

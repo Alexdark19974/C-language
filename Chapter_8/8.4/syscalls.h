@@ -59,6 +59,7 @@ enum _flags {
 };
 
 _FILE *_fopen(char *, char *);
+int _fseek(_FILE *, long, int);
 int _fillbuf(_FILE *);
 int _flushbuf(int, _FILE *);
 int _fprintf(_FILE *stream, char *fmt, ...);

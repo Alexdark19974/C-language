@@ -4,10 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include <fcntl.h>      /* flags for read and write */
 #include <stdarg.h>
 #include <errno.h>
 #include <ctype.h>
+#include <sys/types.h>  /* typedefs */
+#include <sys/stat.h>   /* structure returned by stat */
+#include <time.h>
+#include <dirent.h>     /* for getdents64() */
 #if defined (LSEEK_CASE)
 #define DEFAULT_SIZE    BUFSIZ
 #define DEFAULT_POS     0
@@ -59,6 +63,7 @@ enum _flags {
 };
 
 _FILE *_fopen(char *, char *);
+int _fseek(_FILE *, long, int);
 int _fillbuf(_FILE *);
 int _flushbuf(int, _FILE *);
 int _fprintf(_FILE *stream, char *fmt, ...);
@@ -85,5 +90,38 @@ int copy(char **);
 int get_char(void);
 void put_char(int);
 void _error(char *, ...);
+
+#define MAXNAME 256
+typedef long Align;     /* for alignment to long boundary */
+
+union Header {          /* block header */
+    struct {
+        union Header *ptr;  /* next block on free list */
+        unsigned size;      /* size of this block */
+    } s;
+    Align x;            /* force alignment of blocks */
+};
+
+typedef struct Client {
+    int id;
+    char name[MAXNAME];
+    struct Client *next;
+} Client;
+
+enum { ADD = 1, DELETE, SHOW, EXAMPLE, EXIT };
+
+void * _malloc(unsigned);
+void * _calloc(unsigned nmemb, unsigned nbytes);
+void _free(void *);
+void start_client_database(void);
+struct Client *add_client(struct Client *);
+struct Client *delete_client(struct Client *);
+void insert_client(struct Client *);
+void list_clients(struct Client *);
+void display_freelist(void);
+void display_usage(void);
+void free_all(struct Client *);
+void unsbrk(void);
+int bfree(void *p, unsigned int n);
 #endif
 
