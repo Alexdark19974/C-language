@@ -1,0 +1,256 @@
+nt c;
+	struct hostent *h;
+	struct icmp *pkt;
+	struct iphdr *iphdr;
+	char packet[DEFDATALEN + 8];
+	int rcvdseq, ret=0;
+	fd_set rset;
+	struct timeval tv;
+
+	if (str[0]) {
+		if ((pingsock = create_icmp_socket()) < 0) {
+			perror("socket");
+			snprintf(tmpBuf, 100, "ping: socket create error");
+			goto setErr_ping;
+		}
+
+		memset(&pingaddr, 0, sizeof(struct sockaddr_in));
+		pingaddr.sin_family = AF_INET;
+
+		if ((h = gethostbyname(str)) == NULL) {
+			//herror("ping: ");
+			//snprintf(tmpBuf, 100, "ping: %s: %s", str, hstrerror(h_errno));
+			goto setErr_ping;
+		}
+
+		if (h->h_addrtype != AF_INET) {
+			//strcpy(tmpBuf, "unknown address type; only AF_INET is currently supported.");
+			goto setErr_ping;
+		}
+
+		memcpy(&pingaddr.sin_addr, h->h_addr, sizeof(pingaddr.sin_addr));
+
+		printf("PING %s (%s): %d data bytes\n",
+		   h->h_name,inet_ntoa(*(struct in_addr *) &pingaddr.sin_addr.s_addr),DEFDATALEN);
+
+		myid = getpid() & 0xFFFF;
+		ntransmitted = nreceived = nrepeats = 0;
+		finished = 0;
+		rcvdseq=ntransmitted-1;
+		FD_ZERO(&rset);
+		FD_SET(pingsock, &rset);
+		/* start the ping's going ... */
+		sendping();
+
+		/* listen for replies */
+		while (1) {
+			struct sockaddr_in from;
+			socklen_t fromlen = (socklen_t) sizeof(from);
+			int c, hlen, dupflag;
+
+			if (finished)
+				break;
+
+			tv.tv_sec = 1;
+			tv.tv_usec = 0;
+
+			if (select(pingsock+1, &rset, NULL, NULL, &tv) > 0) {
+				if ((c = recvfrom(pingsock, packet, sizeof(packet), 0,
+								  (struct sockaddr *) &from, &fromlen)) < 0) {
+
+					printf("sock: recvfrom fail !");
+					continue;
+				}
+			}
+			else // timeout or error
+				continue;
+
+			if (c < DEFDATALEN+ICMP_MINLEN)
+				continue;
+
+			iphdr = (struct iphdr *) packet;
+			hlen = iphdr->ihl << 2;
+			pkt = (struct icmp *) (packet + hlen);	/* skip ip hdr */
+			if (pkt->icmp_id != myid) {
+//				printf("not myid\n");
+				continue;
+			}
+			if (pkt->icmp_type == ICMP_ECHOREPLY) {
+				++nreceived;
+				if (pkt->icmp_seq == rcvdseq) {
+					// duplicate
+					++nrepeats;
+					--nreceived;
+					dupflag = 1;
+				} else {
+					rcvdseq = pkt->icmp_seq;
+					dupflag = 0;
+					if (nreceived < PINGCOUNT)
+					// reply received, send another immediately
+						sendping();
+				}
+				printf("%d bytes from %s: icmp_seq=%u", c,
+					   inet_ntoa(*(struct in_addr *) &from.sin_addr.s_addr),
+					   pkt->icmp_seq);
+				if (dupflag) {
+					printf(" (DUP!)");
+				}
+				printf("\n");
+			}
+			if (nreceived >= PINGCOUNT) {
+				ret = 1;
+				break;
+			}
+		}
+		FD_CLR(pingsock, &rset);
+		close(pingsock);
+		pingsock = -1;
+	}
+	printf("\n--- ping statistics ---\n");
+	printf("%ld packets transmitted, ", ntransmitted);
+	printf("%ld packets received\n\n", nreceived);
+	if (nrepeats)
+		printf("%ld duplicates, ", nrepeats);
+	printf("\n");
+	return ret;
+setErr_ping:
+	if (pingsock >= 0) {
+		close(pingsock);
+		pingsock = -1;
+	}
+	printf("Ping error!!\n\n");
+	return ret;
+}
+
+struct ServerSelectionDiagSt {
+	char host[128];
+	struct sockaddr_in pingaddr;
+	unsigned int hostValid;
+	unsigned int xmitStamp;
+	unsigned int replyRecvd;
+	unsigned int xmitSeq;
+	unsigned int xmitId;
+	unsigned int responseTime;
+	/* below for average response time calc */
+	unsigned int replySuccCnt;
+	unsigned int totalResponseTime;
+};
+
+long getCurrTimeinMS()
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec*1000 + tv.tv_usec/1000);
+}
+
+static void ServerSelectionSendPing(struct ServerSelectionDiagSt *pHostAddr, int hostNum)
+{
+	//struct sysinfo info;
+	struct icmp *pkt;
+	int ret, idx;
+	char packet[DEFDATALEN + 8];
+
+	//sysinfo(&info);
+	for (idx=0; idx<hostNum; idx++)
+	{
+		if (!pHostAddr[idx].hostValid)
+			continue;
+		
+		pkt = (struct icmp *) packet;
+		pkt->icmp_type = ICMP_ECHO;
+		pkt->icmp_code = 0;
+		pkt->icmp_cksum = 0;
+		pkt->icmp_seq = pHostAddr[idx].xmitSeq++;
+		pkt->icmp_id = pHostAddr[idx].xmitId;
+		pkt->icmp_cksum = in_cksum((unsigned short *) pkt, sizeof(packet));
+
+		//fprintf(stderr, "ping request to host %s.\n", pHostAddr[idx].host);
+		ret = sendto(pingsock, packet, sizeof(packet), 0,
+				   (struct sockaddr *) &pHostAddr[idx].pingaddr, sizeof(struct sockaddr_in));
+
+		pHostAddr[idx].xmitStamp = getCurrTimeinMS();
+		pHostAddr[idx].replyRecvd = 0;
+		if (ret < 0 || ret != sizeof(packet)) {
+			pHostAddr[idx].xmitSeq--;
+		}
+	}
+}
+
+static void ServerSelectionRecv(struct ServerSelectionDiagSt *pHostAddr, int hostNum, char *packet)
+{
+	//struct sysinfo info;
+	struct iphdr *iphdr;
+	struct icmp *pkt;
+	int idx, responseTime;
+	int hlen;
+
+	//sysinfo(&info);
+	iphdr = (struct iphdr *) packet;
+	hlen = iphdr->ihl << 2;
+	pkt = (struct icmp *) (packet + hlen);	/* skip ip hdr */
+	//fprintf(stderr, "icmp from %s, seq %#x id %#x\n", inet_ntoa(*(struct in_addr *)&iphdr->saddr), pkt->icmp_seq, pkt->icmp_id);
+
+	for (idx=0; idx<hostNum; idx++)
+	{
+		if (!pHostAddr[idx].hostValid)
+			continue;
+
+		//fprintf(stderr, "host %s  addr %s  seq %#x id %#x\n", pHostAddr[idx].host, inet_ntoa(pHostAddr[idx].pingaddr.sin_addr), (pHostAddr[idx].xmitSeq-1), 
+		//		pHostAddr[idx].xmitId);
+		if (iphdr->saddr != pHostAddr[idx].pingaddr.sin_addr.s_addr)
+			continue;
+		
+		if (pkt->icmp_id != pHostAddr[idx].xmitId)
+			continue;
+
+		if (pkt->icmp_type == ICMP_ECHOREPLY) {
+			if (pkt->icmp_seq == (pHostAddr[idx].xmitSeq-1)) {
+				responseTime = getCurrTimeinMS() - pHostAddr[idx].xmitStamp;
+				pHostAddr[idx].responseTime = (pHostAddr[idx].responseTime > responseTime)?responseTime:pHostAddr[idx].responseTime;
+				pHostAddr[idx].replyRecvd = 1;
+				pHostAddr[idx].replySuccCnt++;
+				pHostAddr[idx].totalResponseTime += pHostAddr[idx].responseTime;
+				fprintf(stderr, "%s ping reply from %s %d ms\n", __func__, inet_ntoa(pHostAddr[idx].pingaddr.sin_addr), pHostAddr[idx].responseTime);
+
+				break;
+			}
+		}
+	}
+}
+
+static int ServerSelectionCheckPingFin(struct ServerSelectionDiagSt *pHostAddr, int hostNum, int timeout)
+{
+	//struct sysinfo info;
+	int idx;
+	int done = 1;
+
+	//sysinfo(&info);
+	for (idx=0; idx<hostNum; idx++)
+	{
+		if (!pHostAddr[idx].hostValid)
+			continue;
+
+		if (!pHostAddr[idx].replyRecvd)
+		{
+			if ((getCurrTimeinMS()-pHostAddr[idx].xmitStamp) < timeout)
+			{
+				done = 0;
+				break;
+			}
+		}
+	}
+
+	return done;
+}
+
+/*
+ * INPUT Parameters:
+ *  - pHostList: hostlist for ping test, splitted by comma, up to 10 hosts
+ *  - pInterface: interface assigned for ping
+ *  - numRepetition: ping test times for each host
+ *  - timeout: ping timeout period
+ * OUTPUT Parameters:
+ *  - pFastestHost: 
+ *  - AverageResponseTime
+ */

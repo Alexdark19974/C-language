@@ -4,10 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include <fcntl.h>      /* flags for read and write */
 #include <stdarg.h>
 #include <errno.h>
 #include <ctype.h>
+#include <sys/types.h>  /* typedefs */
+#include <sys/stat.h>   /* structure returned by stat */
+#include <time.h>
+#include <dirent.h>     /* for getdents64() */
 #if defined (LSEEK_CASE)
 #define DEFAULT_SIZE    BUFSIZ
 #define DEFAULT_POS     0
@@ -59,6 +63,7 @@ enum _flags {
 };
 
 _FILE *_fopen(char *, char *);
+int _fseek(_FILE *, long, int);
 int _fillbuf(_FILE *);
 int _flushbuf(int, _FILE *);
 int _fprintf(_FILE *stream, char *fmt, ...);
