@@ -2,4 +2,5 @@
 *.o
 *.clangd
 *.ycm
-*/bin
+**/bin/*
+**/obj/*
